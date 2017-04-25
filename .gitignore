@@ -1,4 +1,5 @@
 *.d
 *.o
-bin
-obj
+Makefile
+bin/
+obj/
