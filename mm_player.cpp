@@ -20,7 +20,8 @@ public:
       App(1024, 640), 
       controller1_(SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT),
       controller2_('z', 's', 'q', 'd'),
-      terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f))
+      terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f)),
+      generatedTerrain_()
     {}
     
     int init( )
@@ -30,12 +31,14 @@ public:
         vehicule2_ = read_mesh("MMachine/mmachine.obj") ;
         vehicule2_.default_color(Color(0.0f, 0.f, 1.f)) ;
 
-        joueur1_.set_terrain(&terrain_) ;
+        //joueur1_.set_terrain(&terrain_) ;
+        joueur1_.set_terrain(&generatedTerrain_) ;
         joueur1_.set_controller(&controller1_) ;
         joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0)) ;
         joueur1_.activate() ;
 
-        joueur2_.set_terrain(&terrain_) ;
+        //joueur2_.set_terrain(&terrain_) ;
+        joueur2_.set_terrain(&generatedTerrain_) ;
         joueur2_.set_controller(&controller2_) ;
         joueur2_.spawn_at(Point(1,1,0), Vector(0,1,0)) ;
         joueur2_.activate() ;
@@ -124,7 +127,8 @@ public:
         draw(vehicule1_, player1_pos, m_camera) ;
         draw(vehicule2_, player2_pos, m_camera) ;
 
-        terrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
+        //terrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
+        generatedTerrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
 
         //reset
         if(key_state('r')) {
@@ -144,6 +148,7 @@ protected:
     KeyboardController controller2_ ;
 
     FlatTerrain terrain_ ;
+    GeneratedTerrain generatedTerrain_;
 
     Orbiter m_camera;
     Point oldPmin_;
@@ -157,7 +162,7 @@ protected:
 
 int main( int argc, char **argv )
 {
-    // GeneratedTerrain terrain = GeneratedTerrain();
+    //GeneratedTerrain terrain = GeneratedTerrain();
 
     Play app;
     app.run();
