@@ -9,7 +9,7 @@
 // Generated Terrain
 GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   PngUtilities png;
-  png.init("/home/ad/Documents/synthese_image/gkit2light/MMachine/circuit.png");
+  png.init("/home/protoke/Documents/M1/SyntheseImage/gkit2light/MMachine/circuit.png");
   height = png.getHeight();
   width = png.getWidth();
 
@@ -124,7 +124,7 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
 }
 
 void GeneratedTerrain::draw(const Transform& v, const Transform& p) {
-  ::draw(mesh_, RotationX(90) * Scale(30,10,30), v, p) ;
+  ::draw(mesh_, RotationX(90) * Scale(100,10,100), v, p) ;
 }
 
 
