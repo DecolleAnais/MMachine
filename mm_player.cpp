@@ -8,6 +8,10 @@
 #include "draw.h"
 #include "app.h"
 
+#include <chrono>
+
+typedef std::chrono::high_resolution_clock Clock;
+
 class Play : public App
 {
 public:
@@ -36,7 +40,10 @@ public:
         joueur2_.spawn_at(Point(1,1,0), Vector(0,1,0)) ;
         joueur2_.activate() ;
 
-        m_camera.lookat(Point(-20.f, -20.f, -20.f), Point(20.f, 20.f, 20.f));
+        oldPmin_ = Point(-20.f, -20.f, -20.f);
+        oldPmax_ = Point(20.f, 20.f, 20.f);
+        m_camera.lookat(oldPmin_, oldPmax_);
+
 
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -87,18 +94,31 @@ public:
         m_camera.lookat(pmin, pmax);
 
         // détection d'un trop grand champ de caméra, recentre la caméra sur le joueur 1
-        // if(length(pmax - pmin) >= 27) {
-        //     pminT = Point(joueur1_.get_x()-1, joueur1_.get_y()-1, -10);
-        //     pmaxT = Point(joueur1_.get_x()+1, joueur1_.get_y()+1, 10);
-        //     pminXS = ;
-        //     pminYS = ;
-        //     pmaxXS = ;
-        //     pmaxYS = ;
-        //     m_camera.lookat(pmin, pmax);
-        //     float camera_x = joueur1_.get_x();
-        //     m_camera.lookat(pmin, pmax);
-        // }
-        
+        float coeffSpeed = 10.0;
+        if(length(pmax - pmin) >= 27) {
+            Point pminT = Point(joueur1_.get_x()-1, joueur1_.get_y()-1, -10);
+            Point pmaxT = Point(joueur1_.get_x()+1, joueur1_.get_y()+1, 10);
+            float pminXS = (pminT.x - oldPmin_.x) * coeffSpeed;
+            float pminYS = (pminT.y - oldPmin_.y) * coeffSpeed;
+            float pmaxXS = (pmaxT.x - oldPmax_.x) * coeffSpeed;
+            float pmaxYS = (pmaxT.y - oldPmax_.y) * coeffSpeed;
+
+            Clock::time_point time = Clock::now();
+            float delta = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - oldTime_).count() / 1000.0;
+            oldTime_ = time;
+            pmin.x = oldPmin_.x + pminXS * delta;
+            pmin.y = oldPmin_.y + pminYS * delta;
+            pmax.x = oldPmax_.x + pmaxXS * delta;
+            pmax.y = oldPmax_.y + pmaxYS * delta;
+
+            m_camera.lookat(pmin, pmax);
+        }
+        else{
+            oldTime_ = Clock::now();
+        }
+
+        oldPmin_ = pmin;
+        oldPmax_ = pmax;
 
         // dessine les véhicules et le terrain
         draw(vehicule1_, player1_pos, m_camera) ;
@@ -126,6 +146,9 @@ protected:
     FlatTerrain terrain_ ;
 
     Orbiter m_camera;
+    Point oldPmin_;
+    Point oldPmax_;
+    std::chrono::high_resolution_clock::time_point oldTime_;
 
     float camera_x_max;
     float camera_y_max;
