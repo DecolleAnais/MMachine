@@ -7,6 +7,7 @@
 #include "orbiter.h"
 #include "draw.h"
 #include "app.h"
+#include "texture.h"
 
 #include "program.h"
 #include "uniforms.h"
@@ -50,6 +51,11 @@ public:
         oldPmax_ = Point(20.f, 20.f, 20.f);
         m_camera.lookat(oldPmin_, oldPmax_);
 
+        // textures
+        textures[0] = read_texture(0, "data/papillon.png");
+        textures[1] = read_texture(0, "data/debug2x2red.png");
+        textures[2] = read_texture(0, "data/pacman.png");
+
         // chargement shader
         m_program = read_program("MMachine/vertex_fragment_shaders.glsl");
         program_print_errors(m_program);
@@ -70,6 +76,9 @@ public:
         release_program(m_program);
         vehicule1_.release();
         vehicule2_.release();
+        glDeleteTextures(1, &textures[2]);   
+        glDeleteTextures(1, &textures[1]);   
+        glDeleteTextures(1, &textures[0]);   
         return 0;
     }
     
@@ -156,17 +165,17 @@ public:
         //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
         program_uniform(m_program, "mvpMatrix", mvp);
 
-        program_uniform(m_program, "viewInvMatrix", view.inverse());
-
         program_uniform(m_program, "modelMatrix", model);
 
         program_uniform(m_program, "viewMatrix", view);
-        
-        // . parametres "supplementaires" :
-        //   . couleur des pixels, cf la declaration 'uniform vec4 color;' dans le fragment shader
-        program_uniform(m_program, "color", vec4(1, 1, 1, 1));
+
+        program_uniform(m_program, "viewInvMatrix", view.inverse());
 
         program_uniform(m_program, "rotation_scale", RotationX(90) * Scale(30,10,30));
+
+        program_use_texture(m_program, "texture0", 0, textures[0]);
+        program_use_texture(m_program, "texture1", 0, textures[1]);
+        program_use_texture(m_program, "texture2", 0, textures[2]);
 
 
         //terrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
@@ -192,6 +201,7 @@ protected:
 
     FlatTerrain terrain_ ;
     GeneratedTerrain generatedTerrain_;
+    GLuint* textures;
 
     Orbiter m_camera;
     Point oldPmin_;
