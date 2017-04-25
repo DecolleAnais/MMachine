@@ -24,11 +24,11 @@ ifeq ($(config),debug64)
   TARGETDIR  = bin
   TARGET     = $(TARGETDIR)/mm_player
   DEFINES   += -DDEBUG
-  INCLUDES  += -I.. -I../src/gKit -I/home/ad/libC/libpng/include
+  INCLUDES  += -I.. -I../src/gKit
   CPPFLAGS  += -MMD -MP $(DEFINES) $(INCLUDES)
   CFLAGS    += $(CPPFLAGS) $(ARCH) -g -m64 -mtune=native -march=native -std=c++11 -W -Wall -Wextra -Wsign-compare -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable -pipe -flto -g
   CXXFLAGS  += $(CFLAGS) 
-  LDFLAGS   += -m64 -L/usr/lib64 -flto -g -L/home/ad/libC/libpng/lib
+  LDFLAGS   += -m64 -L/usr/lib64 -flto -g
   LIBS      += -lGLEW -lSDL2 -lSDL2_image -lGL -lpng -lz
   RESFLAGS  += $(DEFINES) $(INCLUDES) 
   LDDEPS    += 
@@ -46,11 +46,11 @@ ifeq ($(config),release64)
   TARGETDIR  = bin
   TARGET     = $(TARGETDIR)/mm_player
   DEFINES   += 
-  INCLUDES  += -I.. -I../src/gKit -I/home/ad/libC/libpng/include
+  INCLUDES  += -I.. -I../src/gKit
   CPPFLAGS  += -MMD -MP $(DEFINES) $(INCLUDES)
   CFLAGS    += $(CPPFLAGS) $(ARCH) -O3 -m64 -mtune=native -march=native -std=c++11 -W -Wall -Wextra -Wsign-compare -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable -pipe -flto -fopenmp
   CXXFLAGS  += $(CFLAGS) 
-  LDFLAGS   += -s -m64 -L/usr/lib64 -flto -fopenmp -L/home/ad/libC/libpng/lib
+  LDFLAGS   += -s -m64 -L/usr/lib64 -flto -fopenmp
   LIBS      += -lGLEW -lSDL2 -lSDL2_image -lGL -lpng -lz
   RESFLAGS  += $(DEFINES) $(INCLUDES) 
   LDDEPS    += 
@@ -68,11 +68,11 @@ ifeq ($(config),debug32)
   TARGETDIR  = bin
   TARGET     = $(TARGETDIR)/mm_player
   DEFINES   += -DDEBUG
-  INCLUDES  += -I.. -I../src/gKit -I/home/ad/libC/libpng/include
+  INCLUDES  += -I.. -I../src/gKit
   CPPFLAGS  += -MMD -MP $(DEFINES) $(INCLUDES)
   CFLAGS    += $(CPPFLAGS) $(ARCH) -g -m32 -mtune=native -march=native -std=c++11 -W -Wall -Wextra -Wsign-compare -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable -pipe -flto -g
   CXXFLAGS  += $(CFLAGS) 
-  LDFLAGS   += -m32 -L/usr/lib32 -flto -g -L/home/ad/libC/libpng/lib
+  LDFLAGS   += -m32 -L/usr/lib32 -flto -g
   LIBS      += -lGLEW -lSDL2 -lSDL2_image -lGL -lpng -lz
   RESFLAGS  += $(DEFINES) $(INCLUDES) 
   LDDEPS    += 
@@ -90,11 +90,11 @@ ifeq ($(config),release32)
   TARGETDIR  = bin
   TARGET     = $(TARGETDIR)/mm_player
   DEFINES   += 
-  INCLUDES  += -I.. -I../src/gKit -I/home/ad/libC/libpng/include
+  INCLUDES  += -I.. -I../src/gKit
   CPPFLAGS  += -MMD -MP $(DEFINES) $(INCLUDES)
   CFLAGS    += $(CPPFLAGS) $(ARCH) -O3 -m32 -mtune=native -march=native -std=c++11 -W -Wall -Wextra -Wsign-compare -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable -pipe -flto -fopenmp
   CXXFLAGS  += $(CFLAGS) 
-  LDFLAGS   += -s -m32 -L/usr/lib32 -flto -fopenmp -L/home/ad/libC/libpng/lib
+  LDFLAGS   += -s -m32 -L/usr/lib32 -flto -fopenmp
   LIBS      += -lGLEW -lSDL2 -lSDL2_image -lGL -lpng -lz
   RESFLAGS  += $(DEFINES) $(INCLUDES) 
   LDDEPS    += 
@@ -128,10 +128,10 @@ OBJECTS := \
 	$(OBJDIR)/image_hdr.o \
 	$(OBJDIR)/vec.o \
 	$(OBJDIR)/orbiter.o \
-	$(OBJDIR)/pngUtilities.o \
 	$(OBJDIR)/terrain.o \
 	$(OBJDIR)/player.o \
 	$(OBJDIR)/controller.o \
+	$(OBJDIR)/pngUtilities.o \
 	$(OBJDIR)/mm_player.o \
 
 RESOURCES := \
@@ -253,9 +253,6 @@ $(OBJDIR)/vec.o: ../src/gKit/vec.cpp
 $(OBJDIR)/orbiter.o: ../src/gKit/orbiter.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/pngUtilities.o: src/pngUtilities.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/terrain.o: src/terrain.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
@@ -263,6 +260,9 @@ $(OBJDIR)/player.o: src/player.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/controller.o: src/controller.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/pngUtilities.o: src/pngUtilities.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/mm_player.o: mm_player.cpp
