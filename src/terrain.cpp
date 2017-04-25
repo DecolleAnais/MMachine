@@ -4,12 +4,23 @@
 #include "pngUtilities.hpp"
 #include "vec.h"
 #include <iostream>
+#include <limits.h>
+#include <unistd.h>
 
+std::string getCurrentPath(){
+  char result[ PATH_MAX ];
+  ssize_t count = readlink( "/proc/self/exe", result, PATH_MAX );
+  std::string current_bin = std::string( result, (count > 0) ? count : 0 );
+  std::size_t found = current_bin.find_last_of("/\\");
+  std::string current_path = current_bin.substr(0,found);
+  return current_path;
+}
 
 // Generated Terrain
 GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   PngUtilities png;
-  png.init("/home/protoke/Documents/M1/SyntheseImage/gkit2light/MMachine/circuit.png");
+  std::string pathToMap = getCurrentPath() + "/../circuit.png";
+  png.init(pathToMap.c_str());
   height = png.getHeight();
   width = png.getWidth();
 
