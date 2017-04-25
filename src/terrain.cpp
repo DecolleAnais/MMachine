@@ -4,12 +4,23 @@
 #include "pngUtilities.hpp"
 #include "vec.h"
 #include <iostream>
+#include <limits.h>
+#include <unistd.h>
 
+std::string getCurrentPath(){
+  char result[ PATH_MAX ];
+  ssize_t count = readlink( "/proc/self/exe", result, PATH_MAX );
+  std::string current_bin = std::string( result, (count > 0) ? count : 0 );
+  std::size_t found = current_bin.find_last_of("/\\");
+  std::string current_path = current_bin.substr(0,found);
+  return current_path;
+}
 
 // Generated Terrain
 GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   PngUtilities png;
-  png.init("/home/ad/Documents/synthese_image/gkit2light/MMachine/circuit.png");
+  std::string pathToMap = getCurrentPath() + "/../circuit.png";
+  png.init(pathToMap.c_str());
   height = png.getHeight();
   width = png.getWidth();
 
@@ -113,8 +124,6 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   for(unsigned int i = 0;i < height - 1;i++) {
     for(unsigned int j = 0;j < width - 1;j++) {
       // create 2 triangles for each quad
-      //mesh_.triangle(vVertexData[i][j], vVertexData[i + 1][j], vVertexData[i + 1][j + 1]);
-      //mesh_.triangle(vVertexData[i + 1][j + 1], vVertexData[i][j + 1], vVertexData[i][j]);
       mesh_.triangle((i + 1) * width + j,
                       i * width + j,
                       (i + 1) * width + (j + 1));
