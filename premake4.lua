@@ -7,7 +7,11 @@ mmachine_steps = {
 
 for i, name in ipairs(mmachine_steps) do
   project(name)
+<<<<<<< HEAD
     language "C++"
+=======
+  	language "C++"
+>>>>>>> 226e73f44314572eba1dd8217a22fd0d71ae5b1c
   	kind "ConsoleApp"
   	targetdir "bin"
   	files ( gkit_files )

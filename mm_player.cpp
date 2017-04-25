@@ -96,29 +96,33 @@ public:
                     10);
         m_camera.lookat(pmin, pmax);
 
+        Clock::time_point time = Clock::now();
+        float delta = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - oldTime_).count() / 1000.0;
+        oldTime_ = time;
+
         // détection d'un trop grand champ de caméra, recentre la caméra sur le joueur 1
-        float coeffSpeed = 10.0;
+        float coeffSpeed = 5.0;
+        Point pminT, pmaxT;
         if(length(pmax - pmin) >= 27) {
-            Point pminT = Point(joueur1_.get_x()-1, joueur1_.get_y()-1, -10);
-            Point pmaxT = Point(joueur1_.get_x()+1, joueur1_.get_y()+1, 10);
-            float pminXS = (pminT.x - oldPmin_.x) * coeffSpeed;
-            float pminYS = (pminT.y - oldPmin_.y) * coeffSpeed;
-            float pmaxXS = (pmaxT.x - oldPmax_.x) * coeffSpeed;
-            float pmaxYS = (pmaxT.y - oldPmax_.y) * coeffSpeed;
-
-            Clock::time_point time = Clock::now();
-            float delta = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - oldTime_).count() / 1000.0;
-            oldTime_ = time;
-            pmin.x = oldPmin_.x + pminXS * delta;
-            pmin.y = oldPmin_.y + pminYS * delta;
-            pmax.x = oldPmax_.x + pmaxXS * delta;
-            pmax.y = oldPmax_.y + pmaxYS * delta;
-
-            m_camera.lookat(pmin, pmax);
+            pminT = Point(joueur1_.get_x()-1, joueur1_.get_y()-1, -10);
+            pmaxT = Point(joueur1_.get_x()+1, joueur1_.get_y()+1, 10);
         }
         else{
-            oldTime_ = Clock::now();
+            pminT = pmin;
+            pmaxT = pmax;
         }
+        
+        float pminXS = (pminT.x - oldPmin_.x) * coeffSpeed;
+        float pminYS = (pminT.y - oldPmin_.y) * coeffSpeed;
+        float pmaxXS = (pmaxT.x - oldPmax_.x) * coeffSpeed;
+        float pmaxYS = (pmaxT.y - oldPmax_.y) * coeffSpeed;
+        
+        pmin.x = oldPmin_.x + pminXS * delta;
+        pmin.y = oldPmin_.y + pminYS * delta;
+        pmax.x = oldPmax_.x + pmaxXS * delta;
+        pmax.y = oldPmax_.y + pmaxYS * delta;
+
+        m_camera.lookat(pmin, pmax);
 
         oldPmin_ = pmin;
         oldPmax_ = pmax;
