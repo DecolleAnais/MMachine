@@ -8,6 +8,9 @@
 #include "draw.h"
 #include "app.h"
 
+#include "program.h"
+#include "uniforms.h"
+
 #include <chrono>
 
 typedef std::chrono::high_resolution_clock Clock;
@@ -47,6 +50,9 @@ public:
         oldPmax_ = Point(20.f, 20.f, 20.f);
         m_camera.lookat(oldPmin_, oldPmax_);
 
+        // chargement shader
+        m_program = read_program("MMachine/vertex_fragment_shaders.glsl");
+        program_print_errors(m_program);
 
         // etat openGL par defaut
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -61,6 +67,7 @@ public:
     // destruction des objets de l'application
     int quit( )
     {
+        release_program(m_program);
         vehicule1_.release();
         vehicule2_.release();
         return 0;
@@ -131,8 +138,40 @@ public:
         draw(vehicule1_, player1_pos, m_camera) ;
         draw(vehicule2_, player2_pos, m_camera) ;
 
+        // dessiner avec le shader program
+        // configurer le pipeline 
+        glUseProgram(m_program);
+
+        // configurer le shader program
+        // . recuperer les transformations
+        Transform model = Identity(); //RotationX(global_time() / 20);
+        Transform view = m_camera.view();
+        Transform projection = m_camera.projection(window_width(), window_height(), 45);
+        
+        // . composer les transformations : model, view et projection
+        Transform mvp = projection * view * model;
+
+
+        // . parametrer le shader program :
+        //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+        program_uniform(m_program, "mvpMatrix", mvp);
+
+        program_uniform(m_program, "viewInvMatrix", view.inverse());
+
+        program_uniform(m_program, "modelMatrix", model);
+
+        program_uniform(m_program, "viewMatrix", view);
+        
+        // . parametres "supplementaires" :
+        //   . couleur des pixels, cf la declaration 'uniform vec4 color;' dans le fragment shader
+        program_uniform(m_program, "color", vec4(1, 1, 1, 1));
+
+        program_uniform(m_program, "rotation_scale", RotationX(90) * Scale(30,10,30));
+
+
         //terrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
-        generatedTerrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
+        //generatedTerrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
+        generatedTerrain_.draw(m_program);
 
         //reset
         if(key_state('r')) {
@@ -161,6 +200,8 @@ protected:
 
     float camera_x_max;
     float camera_y_max;
+
+    GLuint m_program;
 };
 
 

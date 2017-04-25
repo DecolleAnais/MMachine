@@ -9,12 +9,18 @@
 // Generated Terrain
 GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   PngUtilities png;
-  png.init("/home/protoke/Documents/M1/SyntheseImage/gkit2light/MMachine/circuit.png");
+  png.init("/home/ad/Documents/synthese_image/gkit2light/MMachine/circuit.png");
   height = png.getHeight();
   width = png.getWidth();
 
-  // creation of the terrain grid
+  // creation of the terrain grid (vertex and texture)
   std::vector< std::vector< Vector > > vVertexData(height, std::vector< Vector >(width)); 
+  std::vector< std::vector< vec2 > > vCoordsData(height, std::vector< vec2 >(width)); 
+
+  // size of the texture
+  float fTextureU = float(width) * 0.1f;
+  float fTextureV = float(height) * 0.1f;
+
   for(unsigned int i = 0;i < height;i++) {
     for(unsigned int j = 0;j < width;j++) {
       // scale of height and width
@@ -24,6 +30,7 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
       float fVertexHeight = png.getValue(i, j) / 255.0f;
       // add the coordinates of each vertex
       vVertexData[i][j] = Vector(-0.5 + fScaleW, fVertexHeight, -0.5 + fScaleH);
+      vCoordsData[i][j] = vec2(fTextureU * fScaleW, fTextureV * fScaleH);
     }
   }
 
@@ -95,6 +102,8 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
     for(unsigned int j = 0;j < width;j++) {
       // add the normal for each vertex
       mesh_.normal(vFinalNormals[i][j]);
+      // add the texture
+      mesh_.texcoord(vCoordsData[i][j]);
       // add the vertex
       mesh_.vertex((Point)vVertexData[i][j]);
     }
@@ -125,6 +134,10 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
 
 void GeneratedTerrain::draw(const Transform& v, const Transform& p) {
   ::draw(mesh_, RotationX(90) * Scale(100,10,100), v, p) ;
+}
+
+void GeneratedTerrain::draw(const GLuint& shaders_program) {
+  mesh_.draw(shaders_program);
 }
 
 

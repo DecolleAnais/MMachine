@@ -49,6 +49,7 @@ class GeneratedTerrain : public Terrain {
         GeneratedTerrain() ;
         void project(const Point& from, Point& to, Vector& n) const ;
         void draw(const Transform& v, const Transform& p) ;
+        void draw(const GLuint& shaders_program);
     private :
         Mesh mesh_ ;
         unsigned int height;
