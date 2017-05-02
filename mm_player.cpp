@@ -104,12 +104,14 @@ public:
 
 
         // centre la caméra
-        Point pmin(std::min(joueur1_.get_x(), joueur2_.get_x()),
-                    std::min(joueur1_.get_y(), joueur2_.get_y()),
-                    -10);
-        Point pmax(std::max(joueur1_.get_x(), joueur2_.get_x()),
-                    std::max(joueur1_.get_y(), joueur2_.get_y()),
-                    10);
+
+        int plage = 20;
+        Point pmin(std::min(joueur1_.get_x(), joueur2_.get_x())-plage,
+                    std::min(joueur1_.get_y(), joueur2_.get_y()+plage),
+                    -plage);
+        Point pmax(std::max(joueur1_.get_x(), joueur2_.get_x()-plage),
+                    std::max(joueur1_.get_y(), joueur2_.get_y()+plage),
+                    plage);
         m_camera.lookat(pmin, pmax);
 
         Clock::time_point time = Clock::now();
@@ -120,8 +122,8 @@ public:
         float coeffSpeed = 5.0;
         Point pminT, pmaxT;
         if(length(pmax - pmin) >= 27) {
-            pminT = Point(joueur1_.get_x()-1, joueur1_.get_y()-1, -10);
-            pmaxT = Point(joueur1_.get_x()+1, joueur1_.get_y()+1, 10);
+            pminT = Point(joueur1_.get_x()-plage, joueur1_.get_y()-plage, -plage);
+            pmaxT = Point(joueur1_.get_x()+plage, joueur1_.get_y()+plage, plage);
         }
         else{
             pminT = pmin;
@@ -153,25 +155,24 @@ public:
 
         // configurer le shader program
         // . recuperer les transformations
-        Transform model = Identity(); //RotationX(global_time() / 20);
+        Transform model = RotationX(90) * Scale(1,1,1); //RotationX(global_time() / 20);
         Transform view = m_camera.view();
         Transform projection = m_camera.projection(window_width(), window_height(), 45);
         
         // . composer les transformations : model, view et projection
+        Transform mv = view * model;
         Transform mvp = projection * view * model;
 
 
         // . parametrer le shader program :
         //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+
+        program_uniform(m_program, "mvMatrix", mv);        
+        program_uniform(m_program, "normalMatrix", mv.normal());        
         program_uniform(m_program, "mvpMatrix", mvp);
-
         program_uniform(m_program, "modelMatrix", model);
-
         program_uniform(m_program, "viewMatrix", view);
-
         program_uniform(m_program, "viewInvMatrix", view.inverse());
-
-        program_uniform(m_program, "rotation_scale", RotationX(90) * Scale(30,10,30));
 
         program_use_texture(m_program, "texture0", 0, textures[0]);
         program_use_texture(m_program, "texture1", 0, textures[1]);

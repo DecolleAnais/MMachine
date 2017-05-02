@@ -124,6 +124,10 @@ void Player::step() {
   last_time_ = time ;
 }
 
+void Player::collide(){
+  
+}
+
 bool Player :: active() {
   return active_ ;
 }
@@ -138,6 +142,7 @@ void Player::deactivate() {
 
 Transform Player::transform() {
   step() ;
+  collide();
   return Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) ;
 }
 
