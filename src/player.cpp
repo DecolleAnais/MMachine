@@ -125,7 +125,6 @@ void Player::step() {
 }
 
 void Player::collide(){
-  
 }
 
 bool Player :: active() {
