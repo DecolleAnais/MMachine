@@ -49,6 +49,10 @@ class Player {
      */
     void set_controller(const Controller* controller) ;
     /**
+     * Boite englobante pour gerer les collisions
+     */
+    void set_bounding_box(const Point p1, const Point p2);
+    /**
      * Retourne la position en x du joueur.
      */
     float get_x();
@@ -56,6 +60,10 @@ class Player {
      * Retourne la position en y du joueur.
      */
     float get_y();
+    /**
+     * Collisions
+     */
+    bool collide(Mesh player2);
     
   private :
 
@@ -78,6 +86,7 @@ class Player {
     Point position_ ;
     Vector direction_ ;
     Vector normal_ ;
+    std::vector<Point> bounding_box_;
 
     //parameters
     float acceleration_ ;
