@@ -56,6 +56,10 @@ class Player {
      * Retourne la position en y du joueur.
      */
     float get_y();
+    /**
+     * Retourne la position en z du joueur.
+     */
+    float get_z();
     
   private :
 

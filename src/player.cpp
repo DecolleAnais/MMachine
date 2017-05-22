@@ -161,6 +161,10 @@ float Player::get_y() {
   return position_.y;
 }
 
+float Player::get_z() {
+  return position_.z;
+}
+
 void Player::project(Point& candidate) {
   //project position and get normal
   terrain_->project(position_, candidate, normal_) ;

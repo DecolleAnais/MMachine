@@ -13,6 +13,7 @@
 #include "uniforms.h"
 
 #include <chrono>
+#include <cmath>
 
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -47,14 +48,15 @@ public:
         joueur2_.spawn_at(Point(1,1,0), Vector(0,1,0)) ;
         joueur2_.activate() ;
 
-        oldPmin_ = Point(-20.f, -20.f, -20.f);
-        oldPmax_ = Point(20.f, 20.f, 20.f);
-        m_camera.lookat(oldPmin_, oldPmax_);
+        oldPmin_ = Point(0.f, 0.f, 0.f);
+        oldPmax_ = Point(1.f, 1.f, 0.f);
+        
+        view = Lookat(Point(0,0,20), Point(0,0,0), Vector(0,1,0));
 
         // textures
-        textures[0] = read_texture(0, "data/papillon.png");
-        textures[1] = read_texture(0, "data/debug2x2red.png");
-        textures[2] = read_texture(0, "data/pacman.png");
+        // textures[0] = read_texture(0, "data/papillon.png");
+        // textures[1] = read_texture(0, "data/debug2x2red.png");
+        // textures[2] = read_texture(0, "data/pacman.png");
 
         // chargement shader
         m_program = read_program("MMachine/vertex_fragment_shaders.glsl");
@@ -76,9 +78,9 @@ public:
         release_program(m_program);
         vehicule1_.release();
         vehicule2_.release();
-        glDeleteTextures(1, &textures[2]);   
-        glDeleteTextures(1, &textures[1]);   
-        glDeleteTextures(1, &textures[0]);   
+        // glDeleteTextures(1, &textures[2]);   
+        // glDeleteTextures(1, &textures[1]);   
+        // glDeleteTextures(1, &textures[0]);   
         return 0;
     }
     
@@ -88,42 +90,41 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // deplace la camera
-        int mx, my;
-        unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
-        if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
-            m_camera.rotation(mx, my);
-        else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
-            m_camera.move(mx);
-        else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
-            m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
+        // int mx, my;
+        // unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
+        // if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
+        //     m_camera.rotation(mx, my);
+        // else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
+        //     m_camera.move(mx);
+        // else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
+        //     m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
 
 
         // déplace les joueurs
         Transform player1_pos = joueur1_.transform() ;
         Transform player2_pos = joueur2_.transform() ;
 
-
         // centre la caméra
+        Point pmin(std::min(joueur1_.get_x(), joueur2_.get_x()),
+                    std::min(joueur1_.get_y(), joueur2_.get_y()),
+                    std::max(joueur1_.get_z(), joueur2_.get_z()));
+        Point pmax(std::max(joueur1_.get_x(), joueur2_.get_x()),
+                    std::max(joueur1_.get_y(), joueur2_.get_y()),
+                    std::max(joueur1_.get_z(), joueur2_.get_z()));
 
-        int plage = 20;
-        Point pmin(std::min(joueur1_.get_x(), joueur2_.get_x())-plage,
-                    std::min(joueur1_.get_y(), joueur2_.get_y()+plage),
-                    -plage);
-        Point pmax(std::max(joueur1_.get_x(), joueur2_.get_x()-plage),
-                    std::max(joueur1_.get_y(), joueur2_.get_y()+plage),
-                    plage);
-        m_camera.lookat(pmin, pmax);
+        std::cout << pmin << " " << pmax << std::endl;
 
         Clock::time_point time = Clock::now();
         float delta = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - oldTime_).count() / 1000.0;
         oldTime_ = time;
 
         // détection d'un trop grand champ de caméra, recentre la caméra sur le joueur 1
-        float coeffSpeed = 5.0;
+        float coeffSpeed = 7.5;
+        float maxDistPlayers = 27.0f;
         Point pminT, pmaxT;
-        if(length(pmax - pmin) >= 27) {
-            pminT = Point(joueur1_.get_x()-plage, joueur1_.get_y()-plage, -plage);
-            pmaxT = Point(joueur1_.get_x()+plage, joueur1_.get_y()+plage, plage);
+        if(length(pmax - pmin) >= maxDistPlayers) {
+            pminT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
+            pmaxT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
         }
         else{
             pminT = pmin;
@@ -140,14 +141,21 @@ public:
         pmax.x = oldPmax_.x + pmaxXS * delta;
         pmax.y = oldPmax_.y + pmaxYS * delta;
 
-        m_camera.lookat(pmin, pmax);
+        float dist = distance(pmin, pmax);
+        float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 10.0;
+        std::cout << dist << " " << cameraDist << std::endl;
+        Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
+        std::cout << cameraPos << std::endl;
+        view = Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
 
         oldPmin_ = pmin;
         oldPmax_ = pmax;
 
+        Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
+
         // dessine les véhicules et le terrain
-        draw(vehicule1_, player1_pos, m_camera) ;
-        draw(vehicule2_, player2_pos, m_camera) ;
+        draw(vehicule1_, player1_pos, view, projection) ;
+        draw(vehicule2_, player2_pos, view, projection) ;
 
         // dessiner avec le shader program
         // configurer le pipeline 
@@ -155,9 +163,7 @@ public:
 
         // configurer le shader program
         // . recuperer les transformations
-        Transform model = RotationX(90) * Scale(1,1,1); //RotationX(global_time() / 20);
-        Transform view = m_camera.view();
-        Transform projection = m_camera.projection(window_width(), window_height(), 45);
+        Transform model = RotationX(90) * Scale(1,1,1); //RotationX(global_time() / 20);     
         
         // . composer les transformations : model, view et projection
         Transform mv = view * model;
@@ -204,7 +210,7 @@ protected:
     GeneratedTerrain generatedTerrain_;
     GLuint* textures;
 
-    Orbiter m_camera;
+    Transform view;
     Point oldPmin_;
     Point oldPmax_;
     std::chrono::high_resolution_clock::time_point oldTime_;
