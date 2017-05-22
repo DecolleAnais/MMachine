@@ -53,7 +53,8 @@ class GeneratedTerrain : public Terrain {
     private :
         Mesh mesh_ ;
         unsigned int height;
-        unsigned int width;} ;
+        unsigned int width;
+} ;
 
 
 #endif

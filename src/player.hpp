@@ -81,6 +81,7 @@ class Player {
     Vector speed_ ;
     int last_time_ ;
     void step() ;
+    void collide();
 
     //elements
     Point position_ ;

@@ -108,6 +108,7 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
     }
   }
 
+  Vector scale = Vector(100,20,100);
   // create the mesh
   for(unsigned int i = 0;i < height;i++) {
     for(unsigned int j = 0;j < width;j++) {
@@ -116,7 +117,8 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
       // add the texture
       mesh_.texcoord(vCoordsData[i][j]);
       // add the vertex
-      mesh_.vertex((Point)vVertexData[i][j]);
+      Point unscaled_vertex = (Point)vVertexData[i][j];
+      mesh_.vertex(Point(unscaled_vertex.x * scale.x, unscaled_vertex.y * scale.y, unscaled_vertex.z * scale.z));
     }
   }
 
