@@ -3,6 +3,10 @@
 #include "image_io.h"
 #include "pngUtilities.hpp"
 #include "vec.h"
+
+#include "program.h"
+#include "uniforms.h"
+
 #include <iostream>
 #include <limits.h>
 #include <unistd.h>
@@ -147,7 +151,31 @@ void GeneratedTerrain::draw(const Transform& v, const Transform& p) {
   ::draw(mesh_, RotationX(90) * Scale(100,10,100), v, p) ;
 }
 
-void GeneratedTerrain::draw(const GLuint& shaders_program) {
+void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) {
+  // configurer le pipeline 
+  glUseProgram(shaders_program);
+
+  // configurer le shader program
+  // . composer les transformations : model, view et projection
+  Transform mv = view * model;
+  Transform mvp = proj * view * model;
+
+  // . parametrer le shader program :
+  //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+  program_uniform(shaders_program, "mvMatrix", mv);        
+  program_uniform(shaders_program, "normalMatrix", mv.normal());        
+  program_uniform(shaders_program, "mvpMatrix", mvp);
+  program_uniform(shaders_program, "modelMatrix", model);
+  program_uniform(shaders_program, "viewMatrix", view);
+  program_uniform(shaders_program, "viewInvMatrix", view.inverse());
+
+  // program_use_texture(shaders_program, "texture0", 0, textures[0]);
+  // program_use_texture(shaders_program, "texture1", 0, textures[1]);
+  // program_use_texture(shaders_program, "texture2", 0, textures[2]);
+
+
+  //terrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
+  //generatedTerrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
   mesh_.draw(shaders_program);
 }
 

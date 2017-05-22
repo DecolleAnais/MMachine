@@ -50,8 +50,6 @@ public:
 
         oldPmin_ = Point(0.f, 0.f, 0.f);
         oldPmax_ = Point(1.f, 1.f, 0.f);
-        
-        view = Lookat(Point(0,0,20), Point(0,0,0), Vector(0,1,0));
 
         // textures
         // textures[0] = read_texture(0, "data/papillon.png");
@@ -84,26 +82,7 @@ public:
         return 0;
     }
     
-    // dessiner une nouvelle image
-    int render( )
-    {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // deplace la camera
-        // int mx, my;
-        // unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
-        // if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
-        //     m_camera.rotation(mx, my);
-        // else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
-        //     m_camera.move(mx);
-        // else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
-        //     m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
-
-
-        // déplace les joueurs
-        Transform player1_pos = joueur1_.transform() ;
-        Transform player2_pos = joueur2_.transform() ;
-
+    Transform updateCamera(){
         // centre la caméra
         Point pmin(std::min(joueur1_.get_x(), joueur2_.get_x()),
                     std::min(joueur1_.get_y(), joueur2_.get_y()),
@@ -111,8 +90,6 @@ public:
         Point pmax(std::max(joueur1_.get_x(), joueur2_.get_x()),
                     std::max(joueur1_.get_y(), joueur2_.get_y()),
                     std::max(joueur1_.get_z(), joueur2_.get_z()));
-
-        std::cout << pmin << " " << pmax << std::endl;
 
         Clock::time_point time = Clock::now();
         float delta = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - oldTime_).count() / 1000.0;
@@ -146,11 +123,35 @@ public:
         std::cout << dist << " " << cameraDist << std::endl;
         Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
         std::cout << cameraPos << std::endl;
-        view = Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
 
         oldPmin_ = pmin;
         oldPmax_ = pmax;
 
+        return Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
+    }
+
+    // dessiner une nouvelle image
+    int render( )
+    {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // deplace la camera
+        // int mx, my;
+        // unsigned int mb= SDL_GetRelativeMouseState(&mx, &my);
+        // if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
+        //     m_camera.rotation(mx, my);
+        // else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
+        //     m_camera.move(mx);
+        // else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
+        //     m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
+
+
+        // déplace les joueurs
+        Transform player1_pos = joueur1_.transform() ;
+        Transform player2_pos = joueur2_.transform() ;
+
+        // déplace la caméra & récupère la projection
+        Transform view = updateCamera();
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
 
         // dessine les véhicules et le terrain
@@ -158,36 +159,7 @@ public:
         draw(vehicule2_, player2_pos, view, projection) ;
 
         // dessiner avec le shader program
-        // configurer le pipeline 
-        glUseProgram(m_program);
-
-        // configurer le shader program
-        // . recuperer les transformations
-        Transform model = RotationX(90) * Scale(1,1,1); //RotationX(global_time() / 20);     
-        
-        // . composer les transformations : model, view et projection
-        Transform mv = view * model;
-        Transform mvp = projection * view * model;
-
-
-        // . parametrer le shader program :
-        //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
-
-        program_uniform(m_program, "mvMatrix", mv);        
-        program_uniform(m_program, "normalMatrix", mv.normal());        
-        program_uniform(m_program, "mvpMatrix", mvp);
-        program_uniform(m_program, "modelMatrix", model);
-        program_uniform(m_program, "viewMatrix", view);
-        program_uniform(m_program, "viewInvMatrix", view.inverse());
-
-        program_use_texture(m_program, "texture0", 0, textures[0]);
-        program_use_texture(m_program, "texture1", 0, textures[1]);
-        program_use_texture(m_program, "texture2", 0, textures[2]);
-
-
-        //terrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
-        //generatedTerrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
-        generatedTerrain_.draw(m_program);
+        generatedTerrain_.draw(m_program, RotationX(90) * Scale(1,1,1), view, projection);
 
         //reset
         if(key_state('r')) {
@@ -210,7 +182,6 @@ protected:
     GeneratedTerrain generatedTerrain_;
     GLuint* textures;
 
-    Transform view;
     Point oldPmin_;
     Point oldPmax_;
     std::chrono::high_resolution_clock::time_point oldTime_;
