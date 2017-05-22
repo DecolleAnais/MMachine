@@ -3,7 +3,7 @@
 #include <SDL2/SDL.h>
 
 Player::Player() : 
-  bounding_box_(),
+  //bounding_box_(),
   terrain_(nullptr),
   forward_(true),
   switchable_(true),
@@ -154,10 +154,10 @@ void Player::set_controller(const Controller* controller) {
   controller_ = controller ;
 }
 
-void set_bounding_box(const Point p1, const Point p2) {
+/*void set_bounding_box(const Point p1, const Point p2) {
   bounding_box_.push(p1);
   bounding_box_.push(p2);
-}
+}*/
 
 float Player::get_x() {
   return position_.x;

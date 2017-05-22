@@ -51,7 +51,7 @@ class Player {
     /**
      * Boite englobante pour gerer les collisions
      */
-    void set_bounding_box(const Point p1, const Point p2);
+    //void set_bounding_box(const Point p1, const Point p2);
     /**
      * Retourne la position en x du joueur.
      */
