@@ -142,6 +142,90 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   png.free();
 }
 
+void GeneratedTerrain::smooth(const unsigned int iterations) {
+  unsigned int nb_iterations = 0;
+  while(nb_iterations < iterations) {
+    // lissage du terrain
+    unsigned int id = 0;
+    std::vector< std::vector< unsigned int > > neighbours;
+    neighbours.resize(2);
+    for(unsigned int i = 0;i < height;i++) {
+      for(unsigned int j = 0;j < width;j++) {
+        // voisins directs dans neighbours[0], voisins en diagonales dans neighbours[1]
+        if( id > width - 1) {
+          neighbours[0].push_back(id - width); // up
+
+          if(id%width != 0) {
+            neighbours[1].push_back(id - width - 1); // up-left
+          }
+
+          if((id+1)%width != 0) {
+            neighbours[1].push_back(id - width + 1); // up-right
+          }
+        } 
+        if( id < width * height - 1) {
+          neighbours[0].push_back(id + width); // down
+
+          if(id%width != 0) {
+            neighbours[1].push_back(id + width - 1); // down-left
+          }
+
+          if((id+1)%width != 0) {
+            neighbours[1].push_back(id + width + 1); // down-right
+          }
+        }
+
+        if(id%width != 0) {
+          neighbours[0].push_back(id - 1); // left
+        }
+
+        if((id+1)%width != 0) {
+          neighbours[0].push_back(id + 1); // right
+        }
+
+        // calcul moyenne (0.5 * sommet initial.y + 0.3 * sommets_directs.y + 0.2 * sommets_diagonales.y)
+        float y_average = 0.5 * mesh_.positions()[id].y;
+
+        float sum = 0;
+        for(unsigned int k = 0;k < neighbours[0].size();k++) {
+          sum += mesh_.positions()[neighbours[0][k]].y; 
+        }
+        y_average += 0.3 * (sum / neighbours[0].size()); // sommets directs
+
+        sum = 0;
+        for(unsigned int k = 0;k < neighbours[1].size();k++) {
+          sum += mesh_.positions()[neighbours[1][k]].y;
+        }
+        y_average += 0.2 * (sum / neighbours[1].size()); // sommets diagonales
+
+        // maj du sommet avec la moyenne en y
+        vec3 v = mesh_.positions()[id];
+        mesh_.vertex(id, Point(v.x, y_average, v.z));
+
+        /*if( id > width - 1 && id < width * height - 1 && id%width != 0 && (id+1)%width != 0 ) {
+          float y_average = 0.3 * mesh_.positions()[id].y + 
+                          0.10 * mesh_.positions()[id - 1].y + //left
+                          0.10 * mesh_.positions()[id + 1].y + // right
+                          0.10 * mesh_.positions()[id - width].y + // up
+                          0.10 * mesh_.positions()[id + width].y + // down
+                          0.075 * mesh_.positions()[id - width - 1].y + // up-left
+                          0.075 * mesh_.positions()[id - width + 1].y + // up-right
+                          0.075 * mesh_.positions()[id + width - 1].y + // down-left
+                          0.075 * mesh_.positions()[id + width + 1].y // down-right
+                          ;
+          vec3 v = mesh_.positions()[id];
+          mesh_.vertex(id, Point(v.x, y_average, v.z));
+        }*/
+        id++;
+        neighbours[0].clear();
+        neighbours[1].clear();
+      }
+    }
+
+    nb_iterations++;
+  }
+}
+
 void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
   to.z = 0 ;
   n = Vector(0.f, 0.f, 1.f) ;

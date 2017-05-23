@@ -16,7 +16,7 @@ class Player {
      * @param position la position ou placer le vehicule
      * @param direction la direction vers laquelle se dirige le vehicule
      */
-    void spawn_at(const Point& position, const Vector& direction) ;
+    void spawn_at(const Point& position, const Vector& direction, const Point& bound_p1, const Point& bound_p2) ;
 
     /**
      * Statut du vehicule
@@ -51,7 +51,7 @@ class Player {
     /**
      * Boite englobante pour gerer les collisions
      */
-    //void set_bounding_box(const Point p1, const Point p2);
+    void set_bounding_box(const Point p1, const Point p2);
     /**
      * Retourne la position en x du joueur.
      */

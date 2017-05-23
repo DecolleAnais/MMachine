@@ -47,6 +47,7 @@ class FlatTerrain : public Terrain {
 class GeneratedTerrain : public Terrain {
     public :
         GeneratedTerrain() ;
+        void smooth(const unsigned int iterations) ;
         void project(const Point& from, Point& to, Vector& n) const ;
         void draw(const Transform& v, const Transform& p) ;
         void draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;

@@ -3,7 +3,6 @@
 #include <SDL2/SDL.h>
 
 Player::Player() : 
-  //bounding_box_(),
   terrain_(nullptr),
   forward_(true),
   switchable_(true),
@@ -19,9 +18,11 @@ Player::Player() :
   turning_angle_(3.f),
   max_speed_(8.f),
   friction_(0.02f, 0.1f) //front and lateral friction for drift
-{}
+{
+  bounding_box_.resize(2);
+}
 
-void Player::spawn_at(const Point& position, const Vector& direction) {
+void Player::spawn_at(const Point& position, const Vector& direction, const Point& bound_p1, const Point& bound_p2) {
   //reset position on terrain
   position_ = position ;
   direction_ = direction ;
@@ -29,6 +30,11 @@ void Player::spawn_at(const Point& position, const Vector& direction) {
 
   //reset speed
   speed_ = Vector(0.f, 0.f, 0.f) ;
+
+  // init bounding box
+  bounding_box_.clear();
+  bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (bound_p1));
+  bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (bound_p2));
 
   //wait for activation
   deactivate() ;
@@ -143,6 +149,8 @@ void Player::deactivate() {
 Transform Player::transform() {
   step() ;
   collide();
+  bounding_box_[0] = Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (bounding_box_[0]);
+  bounding_box_[1] = Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (bounding_box_[1]);
   return Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) ;
 }
 
@@ -154,10 +162,10 @@ void Player::set_controller(const Controller* controller) {
   controller_ = controller ;
 }
 
-/*void set_bounding_box(const Point p1, const Point p2) {
-  bounding_box_.push(p1);
-  bounding_box_.push(p2);
-}*/
+void Player::set_bounding_box(const Point p1, const Point p2) {
+  bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (p1));
+  bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (p2));
+}
 
 float Player::get_x() {
   return position_.x;

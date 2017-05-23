@@ -39,14 +39,29 @@ public:
         //joueur1_.set_terrain(&terrain_) ;
         joueur1_.set_terrain(&generatedTerrain_) ;
         joueur1_.set_controller(&controller1_) ;
-        joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0)) ;
+
+        Point bound_p1, bound_p2;
+        vehicule1_.bounds(bound_p1, bound_p2);   // points de la boite englobante du mesh
+
+        joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0), bound_p1, bound_p2) ;
         joueur1_.activate() ;
 
         //joueur2_.set_terrain(&terrain_) ;
+        generatedTerrain_.smooth(10);
         joueur2_.set_terrain(&generatedTerrain_) ;
         joueur2_.set_controller(&controller2_) ;
-        joueur2_.spawn_at(Point(1,1,0), Vector(0,1,0)) ;
+
+        vehicule2_.bounds(bound_p1, bound_p2);   // points de la boite englobante du mesh
+
+        joueur2_.spawn_at(Point(1,1,0), Vector(0,1,0), bound_p1, bound_p2) ;
         joueur2_.activate() ;
+
+        // boites englobantes
+        /*Point p1, p2;
+        vehicule1_.bounds(p1, p2);
+        joueur1_.set_bounding_box(p1, p2);
+        vehicule2_.bounds(p1, p2);
+        joueur2_.set_bounding_box(p1, p2);*/
 
         oldPmin_ = Point(0.f, 0.f, 0.f);
         oldPmax_ = Point(1.f, 1.f, 0.f);
@@ -150,6 +165,7 @@ public:
         Transform player1_pos = joueur1_.transform() ;
         Transform player2_pos = joueur2_.transform() ;
 
+
         // déplace la caméra & récupère la projection
         Transform view = updateCamera();
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
@@ -163,8 +179,11 @@ public:
 
         //reset
         if(key_state('r')) {
-          joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0)) ;
-          joueur1_.activate() ;
+            Point bound_p1, bound_p2;
+            vehicule1_.bounds(bound_p1, bound_p2);   // points de la boite englobante du mesh
+
+            joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0), bound_p1, bound_p2) ;
+            joueur1_.activate() ;
         }
 
         return 1;
