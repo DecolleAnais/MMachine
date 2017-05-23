@@ -68,7 +68,8 @@ class Player {
     /**
      * Collisions
      */
-    bool collide(Mesh player2);
+    bool collide(Mesh player);
+    
     
   private :
 
@@ -87,6 +88,8 @@ class Player {
     int last_time_ ;
     void step() ;
     void collide();
+    bool collideWithTerrain();
+    bool collideWithPlayer(Mesh player);
 
     //elements
     Point position_ ;

@@ -227,8 +227,66 @@ void GeneratedTerrain::smooth(const unsigned int iterations) {
 }
 
 void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
-  to.z = 0 ;
-  n = Vector(0.f, 0.f, 1.f) ;
+  float step = mesh_.positions().at(1).x - mesh_.positions().at(0).x;
+
+  float girdX = (float)to.x / (float)step;
+  float girdY = (float)to.y / (float)step;
+  int vertexTopIndex = (girdX) * 1024 + girdY;
+  int vertexBottomIndex = (girdX+1) * 1024 + girdY;
+
+  std::cout << girdX << " " << girdY << "; " << vertexTopIndex << " " << vertexBottomIndex << std::endl;
+  std::cout << height << " " << width << "; " << step << std::endl;
+
+  Point tlflipped(mesh_.positions().at(vertexTopIndex));
+  Point trflipped(mesh_.positions().at(vertexTopIndex+1));
+  Point blflipped(mesh_.positions().at(vertexBottomIndex));
+  Point brflipped(mesh_.positions().at(vertexBottomIndex+1));
+
+  Point tl(tlflipped.x, tlflipped.z, tlflipped.y);
+  Point tr(trflipped.x, trflipped.z, trflipped.y);
+  Point bl(blflipped.x, blflipped.z, blflipped.y);
+  Point br(brflipped.x, brflipped.z, brflipped.y);
+
+  std::cout << tl << "\t\t\t" << tr << std::endl; 
+  std::cout << "\t" << from << "\t" << to << std::endl;
+  std::cout << bl << "\t\t\t" << br << std::endl;
+
+  if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tl, bl, tr)){
+    to.z = std::max(to.z, ((GeneratedTerrain *)this)->getHeight(to, tl, bl, tr));
+    n = Vector(0,1,0);
+  }
+  else if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tr, bl, br)){
+    to.z = std::max(to.z, ((GeneratedTerrain *)this)->getHeight(to, tr, bl, br));
+    n = Vector(0,1,0);
+  }
+  else
+    std::cerr << "ERROR : Terrain projection failed!" << std::endl;
+}
+
+bool GeneratedTerrain::collideWithTriangleGird(Point pos, Point a, Point b, Point c){
+  Vector ref = b - a;
+  Vector target = pos - a;
+  float det1 = ref.x * target.y - ref.y * target.x;
+
+  ref = c - b;
+  target = pos - b;
+  float det2 = ref.x * target.y - ref.y * target.x;
+
+  ref = a - c;
+  target = pos - c;
+  float det3 = ref.x * target.y - ref.y * target.x;
+
+  if(det1 <= 0 && det2 <= 0 && det3 <= 0)
+    return true;
+  return false;
+}
+
+float GeneratedTerrain::getHeight(Point pos, Point a, Point b, Point c){
+  float distA = distance(pos, a);
+  float distB = distance(pos, b);
+  float distC = distance(pos, c);
+
+  return (distA * a.y + distB * b.y + distC * c.y) / (distA + distB + distC);
 }
 
 void GeneratedTerrain::draw(const Transform& v, const Transform& p) {
@@ -262,7 +320,6 @@ void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Tran
   //generatedTerrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
   mesh_.draw(shaders_program);
 }
-
 
 //Flat Terrain
 

@@ -31,18 +31,17 @@ public:
     
     int init( )
     {
+        // Init des meshs des véhicules
         vehicule1_ = read_mesh("MMachine/mmachine.obj") ;
         vehicule1_.default_color(Color(1.0f, 0.f, 0.f)) ;
         vehicule2_ = read_mesh("MMachine/mmachine.obj") ;
         vehicule2_.default_color(Color(0.0f, 0.f, 1.f)) ;
 
+        // Init des joueurs
+        Point bound_p1, bound_p2;
         //joueur1_.set_terrain(&terrain_) ;
         joueur1_.set_terrain(&generatedTerrain_) ;
         joueur1_.set_controller(&controller1_) ;
-
-        Point bound_p1, bound_p2;
-        vehicule1_.bounds(bound_p1, bound_p2);   // points de la boite englobante du mesh
-
         joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0), bound_p1, bound_p2) ;
         joueur1_.activate() ;
 
@@ -50,28 +49,25 @@ public:
         generatedTerrain_.smooth(10);
         joueur2_.set_terrain(&generatedTerrain_) ;
         joueur2_.set_controller(&controller2_) ;
-
-        vehicule2_.bounds(bound_p1, bound_p2);   // points de la boite englobante du mesh
-
         joueur2_.spawn_at(Point(1,1,0), Vector(0,1,0), bound_p1, bound_p2) ;
         joueur2_.activate() ;
-
-        // boites englobantes
-        /*Point p1, p2;
-        vehicule1_.bounds(p1, p2);
-        joueur1_.set_bounding_box(p1, p2);
-        vehicule2_.bounds(p1, p2);
-        joueur2_.set_bounding_box(p1, p2);*/
 
         oldPmin_ = Point(0.f, 0.f, 0.f);
         oldPmax_ = Point(1.f, 1.f, 0.f);
 
-        // textures
+        // Init des boites englobantes
+        // Point p1, p2;
+        // vehicule1_.bounds(p1, p2);
+        // joueur1_.set_bounding_box(p1, p2);
+        // vehicule2_.bounds(p1, p2);
+        // joueur2_.set_bounding_box(p1, p2);
+
+        // Init des textures
         // textures[0] = read_texture(0, "data/papillon.png");
         // textures[1] = read_texture(0, "data/debug2x2red.png");
         // textures[2] = read_texture(0, "data/pacman.png");
 
-        // chargement shader
+        // Init du shader
         m_program = read_program("MMachine/vertex_fragment_shaders.glsl");
         program_print_errors(m_program);
 
@@ -135,9 +131,9 @@ public:
 
         float dist = distance(pmin, pmax);
         float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 10.0;
-        std::cout << dist << " " << cameraDist << std::endl;
+        //std::cout << dist << " " << cameraDist << std::endl;
         Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
-        std::cout << cameraPos << std::endl;
+        //std::cout << cameraPos << std::endl;
 
         oldPmin_ = pmin;
         oldPmax_ = pmax;
@@ -165,7 +161,6 @@ public:
         Transform player1_pos = joueur1_.transform() ;
         Transform player2_pos = joueur2_.transform() ;
 
-
         // déplace la caméra & récupère la projection
         Transform view = updateCamera();
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
@@ -175,7 +170,7 @@ public:
         draw(vehicule2_, player2_pos, view, projection) ;
 
         // dessiner avec le shader program
-        generatedTerrain_.draw(m_program, RotationX(90) * Scale(1,1,1), view, projection);
+        generatedTerrain_.draw(m_program, RotationX(90) * Scale(1, 1, 1), view, projection);
 
         //reset
         if(key_state('r')) {

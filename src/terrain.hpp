@@ -51,10 +51,13 @@ class GeneratedTerrain : public Terrain {
         void project(const Point& from, Point& to, Vector& n) const ;
         void draw(const Transform& v, const Transform& p) ;
         void draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
+
     private :
         Mesh mesh_ ;
         unsigned int height;
         unsigned int width;
+        bool collideWithTriangleGird(Point pos, Point a, Point b, Point c);
+        float getHeight(Point pos, Point a, Point b, Point c);
 } ;
 
 

@@ -3,132 +3,132 @@
 #include <SDL2/SDL.h>
 
 Player::Player() : 
-  terrain_(nullptr),
-  forward_(true),
-  switchable_(true),
-  controller_(nullptr),
-  active_(false),
-  speed_(0.f, 0.f, 0.f),
-  last_time_(0),
-  position_(0.f, 0.f, 0.f),
-  direction_(1.f, 0.f, 0.f),
-  normal_(0.f, 0.f, 0.f),
+terrain_(nullptr),
+forward_(true),
+switchable_(true),
+controller_(nullptr),
+active_(false),
+speed_(0.f, 0.f, 0.f),
+last_time_(0),
+position_(0.f, 0.f, 0.f),
+direction_(1.f, 0.f, 0.f),
+normal_(0.f, 0.f, 0.f),
   //useful parameters to control the movement behavior
-  acceleration_(0.0005f),
-  turning_angle_(3.f),
-  max_speed_(8.f),
+acceleration_(0.0005f),
+turning_angle_(3.f),
+max_speed_(8.f),
   friction_(0.02f, 0.1f) //front and lateral friction for drift
-{
-  bounding_box_.resize(2);
-}
+  {
+      bounding_box_.resize(2);
+  }
 
-void Player::spawn_at(const Point& position, const Vector& direction, const Point& bound_p1, const Point& bound_p2) {
+  void Player::spawn_at(const Point& position, const Vector& direction, const Point& bound_p1, const Point& bound_p2) {
   //reset position on terrain
-  position_ = position ;
-  direction_ = direction ;
-  project(position_) ;
+      position_ = position ;
+      direction_ = direction ;
+      project(position_) ;
 
   //reset speed
-  speed_ = Vector(0.f, 0.f, 0.f) ;
+      speed_ = Vector(0.f, 0.f, 0.f) ;
 
   // init bounding box
-  bounding_box_.clear();
-  bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (bound_p1));
-  bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (bound_p2));
+      bounding_box_.clear();
+      bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (bound_p1));
+      bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (bound_p2));
 
   //wait for activation
-  deactivate() ;
-}
+      deactivate() ;
+  }
 
-void Player::step() {
+  void Player::step() {
   //do not move if inactive
-  if(!active_) return ;
+      if(!active_) return ;
 
   //handle friction
-  Vector linear = dot(speed_, direction_)*direction_ ;
-  Vector lateral = speed_ - linear ;
-  speed_ = speed_ - friction_.x * linear ;
-  speed_ = speed_ - friction_.y * lateral ;
+      Vector linear = dot(speed_, direction_)*direction_ ;
+      Vector lateral = speed_ - linear ;
+      speed_ = speed_ - friction_.x * linear ;
+      speed_ = speed_ - friction_.y * lateral ;
 
   //backward or forward
-  if(forward_) {
+      if(forward_) {
     //handle accelerations
-    if(controller_->up()) {
-      speed_ = speed_ + direction_ * acceleration_ ;
-    }
-
-    if(controller_->down()) {
-      speed_ = speed_ - direction_ * acceleration_ ;
-      if(dot(speed_, direction_) < 0) {
-        speed_ = Vector(0.f, 0.f, 0.f) ;
+        if(controller_->up()) {
+          speed_ = speed_ + direction_ * acceleration_ ;
       }
+
+      if(controller_->down()) {
+          speed_ = speed_ - direction_ * acceleration_ ;
+          if(dot(speed_, direction_) < 0) {
+            speed_ = Vector(0.f, 0.f, 0.f) ;
+        }
     }
 
     //handle rotation
     if(controller_->left()) {
       direction_ = Rotation(normal_, turning_angle_)(direction_) ;
-    }
-    if(controller_->right()) {
+  }
+  if(controller_->right()) {
       direction_ = Rotation(normal_, -turning_angle_)(direction_) ;
-    }
-  } else {
+  }
+} else {
     //handle accelerations
     if(controller_->up()) {
       speed_ = speed_ + direction_ * acceleration_ ;
       if(dot(speed_, direction_) > 0) {
         speed_ = Vector(0.f, 0.f, 0.f) ;
-      }
     }
+}
 
-    if(controller_->down()) {
-      speed_ = speed_ - direction_ * acceleration_ ;
-    }
+if(controller_->down()) {
+  speed_ = speed_ - direction_ * acceleration_ ;
+}
 
     //handle rotation
-    if(controller_->left()) {
-      direction_ = Rotation(normal_, -turning_angle_)(direction_) ;
-    }
-    if(controller_->right()) {
-      direction_ = Rotation(normal_, turning_angle_)(direction_) ;
-    }
-  }
+if(controller_->left()) {
+  direction_ = Rotation(normal_, -turning_angle_)(direction_) ;
+}
+if(controller_->right()) {
+  direction_ = Rotation(normal_, turning_angle_)(direction_) ;
+}
+}
 
   //handle the switch breaking // moving backwards
   //control needs to be released then pushed again
-  if(length(speed_) == 0.f) {
+if(length(speed_) == 0.f) {
     if(switchable_) {
       if(controller_->down()) {
         forward_ = false ;
-      } 
-      if(controller_->up()) {
+    } 
+    if(controller_->up()) {
         forward_ = true ;
-      }
     }
-  }
+}
+}
 
-  switchable_ = !(
-      controller_->up() 
-      || controller_->down() 
-      || controller_->left() 
-      || controller_->right()
-      ) ;
+switchable_ = !(
+  controller_->up() 
+  || controller_->down() 
+  || controller_->left() 
+  || controller_->right()
+  ) ;
 
   //compute new position position
-  int time = SDL_GetTicks() ;
-  Point new_position = position_ + (time - last_time_) * speed_ ;
+int time = SDL_GetTicks() ;
+Point new_position = position_ + (time - last_time_) * speed_ ;
 
   //project
-  project(new_position) ;
+project(new_position) ;
 
   //update speed taking projection into account
-  speed_ = (new_position - position_) / (time - last_time_) ;
-  speed_ = speed_ - dot(speed_, normal_)*normal_ ;
+speed_ = (new_position - position_) / (time - last_time_) ;
+speed_ = speed_ - dot(speed_, normal_)*normal_ ;
 
   //update the position
-  position_ = new_position ;
+position_ = new_position ;
 
   //update time
-  last_time_ = time ;
+last_time_ = time ;
 }
 
 void Player::collide(){
@@ -163,6 +163,7 @@ void Player::set_controller(const Controller* controller) {
 }
 
 void Player::set_bounding_box(const Point p1, const Point p2) {
+  bounding_box_.clear();
   bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (p1));
   bounding_box_.push_back(Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) (p2));
 }
@@ -187,11 +188,28 @@ void Player::project(Point& candidate) {
   direction_ = normalize(direction_ - dot(direction_, normal_)*normal_) ;
 }
 
-bool Player::collide(Mesh player2) {
+bool Player::collide(Mesh player) {
   // collision avec l'autre joueur
-
+  bool collPlayer = collideWithPlayer(player);
 
   // collision avec le terrain
+  bool collTerrain = collideWithTerrain();
 
   // collision avec les obstacles
+  // TODO
+
+  return collPlayer && collTerrain;
 }
+
+bool Player::collideWithTerrain(){  
+  //TODO
+  return false;
+}
+
+
+
+bool Player::collideWithPlayer(Mesh player){
+  //TODO
+  return false;
+}
+
