@@ -47,7 +47,7 @@ class FlatTerrain : public Terrain {
 class GeneratedTerrain : public Terrain {
     public :
         GeneratedTerrain() ;
-        void smooth(const unsigned int iterations) ;
+        void smooth(std::vector< std::vector< Vector > >& vVertexData, const unsigned int iterations) ;
         void project(const Point& from, Point& to, Vector& n) const ;
         void draw(const Transform& v, const Transform& p) ;
         void draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
@@ -55,6 +55,7 @@ class GeneratedTerrain : public Terrain {
         Mesh mesh_ ;
         unsigned int height;
         unsigned int width;
+        unsigned int step; // un point sur step est pris en compte dans la génération du terrain (depuis l'image png)
 } ;
 
 

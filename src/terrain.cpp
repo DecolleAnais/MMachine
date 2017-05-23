@@ -25,8 +25,15 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   PngUtilities png;
   std::string pathToMap = getCurrentPath() + "/../circuit.png";
   png.init(pathToMap.c_str());
-  height = png.getHeight();
-  width = png.getWidth();
+  unsigned int png_height = png.getHeight();
+  unsigned int png_width = png.getWidth();
+  step = 2; // 1 point sur 2 de l'image png est pris en compte dans la génération de terrain (pour lisser un peu le terrain)
+
+  Transform transform = RotationX(90) * Scale(100,20,100);
+  height = png_height/step;
+  width = png_width/step;
+  std::cout << height << std::endl;
+  std::cout << width << std::endl;
 
   // creation of the terrain grid (vertex and texture)
   std::vector< std::vector< Vector > > vVertexData(height, std::vector< Vector >(width)); 
@@ -42,12 +49,16 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
       float fScaleH = float(i) / float(height - 1);
       float fScaleW = float(j) / float(width - 1);
       // vertew height in y between 0 and 1
-      float fVertexHeight = png.getValue(i, j) / 255.0f;
+      float fVertexHeight = png.getValue(i*step, j*step) / 255.0f;
       // add the coordinates of each vertex
-      vVertexData[i][j] = Vector(-0.5 + fScaleW, fVertexHeight, -0.5 + fScaleH);
+      vVertexData[i][j] = transform(Vector(-0.5 + fScaleW, fVertexHeight, -0.5 + fScaleH));
       vCoordsData[i][j] = vec2(fTextureU * fScaleW, fTextureV * fScaleH);
     }
   }
+  
+  // lissage du terrain
+  // on fait une moyenne pondérée de la hauteur de chaque sommet en fonction de la hauteur de ses voisins, avec 20 itérations
+  smooth(vVertexData, 20);
 
   // calculation of the triangles and their normal
 
@@ -112,7 +123,10 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
     }
   }
 
-  Vector scale = Vector(100,20,100);
+
+  //Transform rotation = RotationX(90);
+  //Transform scale = Scale(100, 100, 20);
+  //Vector scale = Vector(100,20,100);
   // create the mesh
   for(unsigned int i = 0;i < height;i++) {
     for(unsigned int j = 0;j < width;j++) {
@@ -121,10 +135,15 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
       // add the texture
       mesh_.texcoord(vCoordsData[i][j]);
       // add the vertex
-      Point unscaled_vertex = (Point)vVertexData[i][j];
-      mesh_.vertex(Point(unscaled_vertex.x * scale.x, unscaled_vertex.y * scale.y, unscaled_vertex.z * scale.z));
+      //Point unscaled_rotated_vertex = rotation((Point)vVertexData[i][j]);
+      //Point scaled_rotated_vertex = scale(unscaled_rotated_vertex);
+      //mesh_.vertex(scaled_rotated_vertex);
+      //Point unscaled_vertex = (Point)vVertexData[i][j];
+      //mesh_.vertex(Point(unscaled_vertex.x * scale.x, unscaled_vertex.y * scale.y, unscaled_vertex.z * scale.z));
+      mesh_.vertex((Point)vVertexData[i][j]);
     }
   }
+
 
   // build the triangles
   for(unsigned int i = 0;i < height - 1;i++) {
@@ -142,80 +161,59 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   png.free();
 }
 
-void GeneratedTerrain::smooth(const unsigned int iterations) {
+void GeneratedTerrain::smooth(std::vector< std::vector< Vector > >& vVertexData, const unsigned int iterations) {
   unsigned int nb_iterations = 0;
   while(nb_iterations < iterations) {
     // lissage du terrain
     unsigned int id = 0;
-    std::vector< std::vector< unsigned int > > neighbours;
+    std::vector< std::vector< float > > neighbours;
     neighbours.resize(2);
     for(unsigned int i = 0;i < height;i++) {
       for(unsigned int j = 0;j < width;j++) {
         // voisins directs dans neighbours[0], voisins en diagonales dans neighbours[1]
-        if( id > width - 1) {
-          neighbours[0].push_back(id - width); // up
-
-          if(id%width != 0) {
-            neighbours[1].push_back(id - width - 1); // up-left
+        if(i > 0) {
+          neighbours[0].push_back(vVertexData[i-1][j].z); // up
+          if(j > 0) {
+            neighbours[1].push_back(vVertexData[i-1][j-1].z); // up-left
           }
-
-          if((id+1)%width != 0) {
-            neighbours[1].push_back(id - width + 1); // up-right
-          }
-        } 
-        if( id < width * height - 1) {
-          neighbours[0].push_back(id + width); // down
-
-          if(id%width != 0) {
-            neighbours[1].push_back(id + width - 1); // down-left
-          }
-
-          if((id+1)%width != 0) {
-            neighbours[1].push_back(id + width + 1); // down-right
+          if(j < width) {
+            neighbours[1].push_back(vVertexData[i-1][j+1].z); // up-right
           }
         }
-
-        if(id%width != 0) {
-          neighbours[0].push_back(id - 1); // left
+        if(i < height-1) {
+          neighbours[0].push_back(vVertexData[i+1][j].z); // down
+          if(j > 0) {
+            neighbours[1].push_back(vVertexData[i+1][j-1].z); // down-left
+          }
+          if(j < width) {
+            neighbours[1].push_back(vVertexData[i+1][j+1].z); // down-right
+          }
         }
-
-        if((id+1)%width != 0) {
-          neighbours[0].push_back(id + 1); // right
+        if(j > 0) {
+          neighbours[0].push_back(vVertexData[i][j-1].z); // left        
+        }
+        if(j < width-1) {
+          neighbours[0].push_back(vVertexData[i][j+1].z); // right
         }
 
         // calcul moyenne (0.5 * sommet initial.y + 0.3 * sommets_directs.y + 0.2 * sommets_diagonales.y)
-        float y_average = 0.5 * mesh_.positions()[id].y;
+        float z_average = 0.5 * vVertexData[i][j].z;
 
         float sum = 0;
         for(unsigned int k = 0;k < neighbours[0].size();k++) {
-          sum += mesh_.positions()[neighbours[0][k]].y; 
+          sum += neighbours[0][k]; 
         }
-        y_average += 0.3 * (sum / neighbours[0].size()); // sommets directs
+        z_average += 0.3 * (sum / neighbours[0].size()); // sommets directs
 
         sum = 0;
         for(unsigned int k = 0;k < neighbours[1].size();k++) {
-          sum += mesh_.positions()[neighbours[1][k]].y;
+          sum += neighbours[1][k];
         }
-        y_average += 0.2 * (sum / neighbours[1].size()); // sommets diagonales
+        z_average += 0.2 * (sum / neighbours[1].size()); // sommets diagonales
 
         // maj du sommet avec la moyenne en y
-        vec3 v = mesh_.positions()[id];
-        mesh_.vertex(id, Point(v.x, y_average, v.z));
+        vVertexData[i][j].z = z_average;
 
-        /*if( id > width - 1 && id < width * height - 1 && id%width != 0 && (id+1)%width != 0 ) {
-          float y_average = 0.3 * mesh_.positions()[id].y + 
-                          0.10 * mesh_.positions()[id - 1].y + //left
-                          0.10 * mesh_.positions()[id + 1].y + // right
-                          0.10 * mesh_.positions()[id - width].y + // up
-                          0.10 * mesh_.positions()[id + width].y + // down
-                          0.075 * mesh_.positions()[id - width - 1].y + // up-left
-                          0.075 * mesh_.positions()[id - width + 1].y + // up-right
-                          0.075 * mesh_.positions()[id + width - 1].y + // down-left
-                          0.075 * mesh_.positions()[id + width + 1].y // down-right
-                          ;
-          vec3 v = mesh_.positions()[id];
-          mesh_.vertex(id, Point(v.x, y_average, v.z));
-        }*/
         id++;
         neighbours[0].clear();
         neighbours[1].clear();

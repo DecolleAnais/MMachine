@@ -47,7 +47,6 @@ public:
         joueur1_.activate() ;
 
         //joueur2_.set_terrain(&terrain_) ;
-        generatedTerrain_.smooth(10);
         joueur2_.set_terrain(&generatedTerrain_) ;
         joueur2_.set_controller(&controller2_) ;
 
@@ -135,9 +134,11 @@ public:
 
         float dist = distance(pmin, pmax);
         float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 10.0;
-        std::cout << dist << " " << cameraDist << std::endl;
+
+        cameraDist = 45;
+        //std::cout << dist << " " << cameraDist << std::endl;
         Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
-        std::cout << cameraPos << std::endl;
+        //std::cout << cameraPos << std::endl;
 
         oldPmin_ = pmin;
         oldPmax_ = pmax;
@@ -175,7 +176,8 @@ public:
         draw(vehicule2_, player2_pos, view, projection) ;
 
         // dessiner avec le shader program
-        generatedTerrain_.draw(m_program, RotationX(90) * Scale(1,1,1), view, projection);
+        //generatedTerrain_.draw(m_program, RotationX(90) * Scale(1,1,1), view, projection);
+        generatedTerrain_.draw(m_program, Identity(), view, projection);
 
         //reset
         if(key_state('r')) {
