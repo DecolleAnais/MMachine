@@ -25,8 +25,7 @@ public:
       App(1024, 640), 
       controller1_(SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT),
       controller2_('z', 's', 'q', 'd'),
-      terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f)),
-      generatedTerrain_()
+      terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f))
     {}
     
     int init( )
@@ -39,21 +38,18 @@ public:
 
         // Init des joueurs
         Point bound_p1, bound_p2;
-        //joueur1_.set_terrain(&terrain_) ;
-        joueur1_.set_terrain(&generatedTerrain_) ;
+        joueur1_.set_terrain(&terrain_) ;
         joueur1_.set_controller(&controller1_) ;
         joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0), bound_p1, bound_p2) ;
         joueur1_.activate() ;
 
-        //joueur2_.set_terrain(&terrain_) ;
-        generatedTerrain_.smooth(10);
-        joueur2_.set_terrain(&generatedTerrain_) ;
+        joueur2_.set_terrain(&terrain_) ;
         joueur2_.set_controller(&controller2_) ;
         joueur2_.spawn_at(Point(1,1,0), Vector(0,1,0), bound_p1, bound_p2) ;
         joueur2_.activate() ;
 
-        oldPmin_ = Point(0.f, 0.f, 0.f);
-        oldPmax_ = Point(1.f, 1.f, 0.f);
+        oldPmin_ = Point(0.f, 0.f, 10.f);
+        oldPmax_ = Point(1.f, 1.f, 10.f);
 
         // Init des boites englobantes
         // Point p1, p2;
@@ -131,6 +127,7 @@ public:
 
         float dist = distance(pmin, pmax);
         float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 10.0;
+        //cameraDist = 45;
         //std::cout << dist << " " << cameraDist << std::endl;
         Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
         //std::cout << cameraPos << std::endl;
@@ -159,7 +156,7 @@ public:
 
         // déplace les joueurs
         Transform player1_pos = joueur1_.transform() ;
-        Transform player2_pos = joueur2_.transform() ;
+        //Transform player2_pos = joueur2_.transform() ;
 
         // déplace la caméra & récupère la projection
         Transform view = updateCamera();
@@ -167,10 +164,11 @@ public:
 
         // dessine les véhicules et le terrain
         draw(vehicule1_, player1_pos, view, projection) ;
-        draw(vehicule2_, player2_pos, view, projection) ;
+        //draw(vehicule2_, player2_pos, view, projection) ;
 
         // dessiner avec le shader program
-        generatedTerrain_.draw(m_program, RotationX(90) * Scale(1, 1, 1), view, projection);
+        //terrain_.draw(m_program, RotationX(90) * Scale(1,1,1), view, projection);
+        terrain_.draw(m_program, Identity(), view, projection);
 
         //reset
         if(key_state('r')) {
@@ -192,8 +190,7 @@ protected:
     KeyboardController controller1_ ;
     KeyboardController controller2_ ;
 
-    FlatTerrain terrain_ ;
-    GeneratedTerrain generatedTerrain_;
+    GeneratedTerrain terrain_;
     GLuint* textures;
 
     Point oldPmin_;

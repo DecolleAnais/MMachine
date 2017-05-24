@@ -21,33 +21,44 @@ std::string getCurrentPath(){
 }
 
 // Generated Terrain
-GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
+GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_(GL_TRIANGLES){
   PngUtilities png;
   std::string pathToMap = getCurrentPath() + "/../circuit.png";
   png.init(pathToMap.c_str());
-  height = png.getHeight();
-  width = png.getWidth();
+  unsigned int png_height = png.getHeight();
+  unsigned int png_width = png.getWidth();
+  step = 2; // 1 point sur 2 de l'image png est pris en compte dans la génération de terrain (pour lisser un peu le terrain)
+
+  Transform transform = Scale(50,50,10);
+  height = png_height/step;
+  width = png_width/step;
+  std::cout << height << std::endl;
+  std::cout << width << std::endl;
 
   // creation of the terrain grid (vertex and texture)
-  std::vector< std::vector< Vector > > vVertexData(height, std::vector< Vector >(width)); 
-  std::vector< std::vector< vec2 > > vCoordsData(height, std::vector< vec2 >(width)); 
+  std::vector< std::vector< Vector > > vVertexData(width, std::vector< Vector >(height)); 
+  std::vector< std::vector< vec2 > > vCoordsData(width, std::vector< vec2 >(height)); 
 
   // size of the texture
-  float fTextureU = float(width) * 0.1f;
-  float fTextureV = float(height) * 0.1f;
+  float fTextureU = float(height) * 0.1f;
+  float fTextureV = float(width) * 0.1f;
 
-  for(unsigned int i = 0;i < height;i++) {
-    for(unsigned int j = 0;j < width;j++) {
-      // scale of height and width
-      float fScaleH = float(i) / float(height - 1);
-      float fScaleW = float(j) / float(width - 1);
-      // vertew height in y between 0 and 1
-      float fVertexHeight = png.getValue(i, j) / 255.0f;
+  for(unsigned int i = 0;i < width;i++) {
+    for(unsigned int j = 0;j < height;j++) {
+      // scale of width and height
+      float fScaleH = float(i) / float(width - 1);
+      float fScaleW = float(j) / float(height - 1);
+      // vertex altitude between 0 and 1
+      float fVertexHeight = png.getValue(i*step, (height - j - 1)*step) / 255.0f;
       // add the coordinates of each vertex
-      vVertexData[i][j] = Vector(-0.5 + fScaleW, fVertexHeight, -0.5 + fScaleH);
+      vVertexData[i][j] = transform(Vector(/*-0.5 +*/ fScaleH, /*-0.5 +*/ fScaleW, fVertexHeight));
       vCoordsData[i][j] = vec2(fTextureU * fScaleW, fTextureV * fScaleH);
     }
   }
+  
+  // lissage du terrain
+  // on fait une moyenne pondérée de la hauteur de chaque sommet en fonction de la hauteur de ses voisins, avec 20 itérations
+  //smooth(vVertexData, 20);
 
   // calculation of the triangles and their normal
 
@@ -55,11 +66,11 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   // 2 rows = 1 for the normals of the triangles0 (half of quad) and 1 for the triangles1 (the other half)
   std::vector< std::vector < Vector > > vNormals[2];
   for(unsigned int i = 0;i < 2;i++) {
-    vNormals[i] = std::vector < std::vector < Vector > > (height - 1, std::vector< Vector >(width - 1));
+    vNormals[i] = std::vector < std::vector < Vector > > (width - 1, std::vector< Vector >(height - 1));
   }  
   // scan each vertex data (each quad)
-  for(unsigned int i = 0;i < height - 1;i++) {
-    for(unsigned int j = 0;j < width - 1;j++) {
+  for(unsigned int i = 0;i < width - 1;i++) {
+    for(unsigned int j = 0;j < height - 1;j++) {
       // create 2 triangles for each quad
       Vector vTriangle0[] = {vVertexData[i][j], vVertexData[i + 1][j], vVertexData[i + 1][j + 1]};
       Vector vTriangle1[] = {vVertexData[i + 1][j + 1], vVertexData[i][j + 1], vVertexData[i][j]};
@@ -75,9 +86,9 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
   }
 
   // calculation of the final normal for each quad
-  std::vector< std::vector< Vector > > vFinalNormals = std::vector< std::vector< Vector > > (height, std::vector< Vector >(width));
-  for(unsigned int i = 0;i < height;i++) {
-    for(unsigned int j = 0;j < width;j++) {
+  std::vector< std::vector< Vector > > vFinalNormals = std::vector< std::vector< Vector > > (width, std::vector< Vector >(height));
+  for(unsigned int i = 0;i < width;i++) {
+    for(unsigned int j = 0;j < height;j++) {
 
       // the final normal of a vertex is defined by the sum of the normals of the triangles around it
       Vector vFinalNormal = Vector(0.0f, 0.0f, 0.0f);
@@ -90,19 +101,19 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
       }
 
       // upper-right triangles
-      if(i != 0 && j != (width - 1)) {
+      if(i != 0 && j != (height - 1)) {
           vFinalNormal = vFinalNormal + vNormals[0][i - 1][j];
       }
 
       // bottom-right triangles
-      if(i != (height - 1) && j != (width - 1)) {
+      if(i != (width - 1) && j != (height - 1)) {
         for(unsigned int k = 0;k < 2;k++) {
           vFinalNormal = vFinalNormal + vNormals[k][i][j];
         }
       }
 
       // bottom-left triangles
-      if(i != (height - 1) && j != 0) {
+      if(i != (width - 1) && j != 0) {
           vFinalNormal = vFinalNormal + vNormals[1][i][j - 1];
       }
 
@@ -112,110 +123,97 @@ GeneratedTerrain::GeneratedTerrain() : mesh_(GL_TRIANGLES){
     }
   }
 
-  Vector scale = Vector(100,20,100);
+
+  //Transform rotation = RotationX(90);
+  //Transform scale = Scale(100, 100, 20);
+  //Vector scale = Vector(100,20,100);
   // create the mesh
-  for(unsigned int i = 0;i < height;i++) {
-    for(unsigned int j = 0;j < width;j++) {
+  for(unsigned int i = 0;i < width;i++) {
+    for(unsigned int j = 0;j < height;j++) {
       // add the normal for each vertex
       mesh_.normal(vFinalNormals[i][j]);
       // add the texture
       mesh_.texcoord(vCoordsData[i][j]);
       // add the vertex
-      Point unscaled_vertex = (Point)vVertexData[i][j];
-      mesh_.vertex(Point(unscaled_vertex.x * scale.x, unscaled_vertex.y * scale.y, unscaled_vertex.z * scale.z));
+      //Point unscaled_rotated_vertex = rotation((Point)vVertexData[i][j]);
+      //Point scaled_rotated_vertex = scale(unscaled_rotated_vertex);
+      //mesh_.vertex(scaled_rotated_vertex);
+      //Point unscaled_vertex = (Point)vVertexData[i][j];
+      //mesh_.vertex(Point(unscaled_vertex.x * scale.x, unscaled_vertex.y * scale.y, unscaled_vertex.z * scale.z));
+      mesh_.vertex((Point)vVertexData[i][j]);
     }
   }
 
+
   // build the triangles
-  for(unsigned int i = 0;i < height - 1;i++) {
-    for(unsigned int j = 0;j < width - 1;j++) {
+  for(unsigned int i = 0;i < width - 1;i++) {
+    for(unsigned int j = 0;j < height - 1;j++) {
       // create 2 triangles for each quad
-      mesh_.triangle((i + 1) * width + j,
-                      i * width + j,
-                      (i + 1) * width + (j + 1));
-      mesh_.triangle(i * width + j,
-                    (i + 1) * width + (j + 1),
-                    i * width + (j + 1));
+      mesh_.triangle((i + 1) * height + j,
+                      i * height + j,
+                      (i + 1) * height + (j + 1));
+      mesh_.triangle(i * height + j,
+                    (i + 1) * height + (j + 1),
+                    i * height + (j + 1));
     }
   }
 
   png.free();
 }
 
-void GeneratedTerrain::smooth(const unsigned int iterations) {
+void GeneratedTerrain::smooth(std::vector< std::vector< Vector > >& vVertexData, const unsigned int iterations) {
   unsigned int nb_iterations = 0;
   while(nb_iterations < iterations) {
     // lissage du terrain
     unsigned int id = 0;
-    std::vector< std::vector< unsigned int > > neighbours;
+    std::vector< std::vector< float > > neighbours;
     neighbours.resize(2);
     for(unsigned int i = 0;i < height;i++) {
       for(unsigned int j = 0;j < width;j++) {
         // voisins directs dans neighbours[0], voisins en diagonales dans neighbours[1]
-        if( id > width - 1) {
-          neighbours[0].push_back(id - width); // up
-
-          if(id%width != 0) {
-            neighbours[1].push_back(id - width - 1); // up-left
+        if(i > 0) {
+          neighbours[0].push_back(vVertexData[i-1][j].z); // up
+          if(j > 0) {
+            neighbours[1].push_back(vVertexData[i-1][j-1].z); // up-left
           }
-
-          if((id+1)%width != 0) {
-            neighbours[1].push_back(id - width + 1); // up-right
-          }
-        } 
-        if( id < width * height - 1) {
-          neighbours[0].push_back(id + width); // down
-
-          if(id%width != 0) {
-            neighbours[1].push_back(id + width - 1); // down-left
-          }
-
-          if((id+1)%width != 0) {
-            neighbours[1].push_back(id + width + 1); // down-right
+          if(j < width) {
+            neighbours[1].push_back(vVertexData[i-1][j+1].z); // up-right
           }
         }
-
-        if(id%width != 0) {
-          neighbours[0].push_back(id - 1); // left
+        if(i < height-1) {
+          neighbours[0].push_back(vVertexData[i+1][j].z); // down
+          if(j > 0) {
+            neighbours[1].push_back(vVertexData[i+1][j-1].z); // down-left
+          }
+          if(j < width) {
+            neighbours[1].push_back(vVertexData[i+1][j+1].z); // down-right
+          }
         }
-
-        if((id+1)%width != 0) {
-          neighbours[0].push_back(id + 1); // right
+        if(j > 0) {
+          neighbours[0].push_back(vVertexData[i][j-1].z); // left        
+        }
+        if(j < width-1) {
+          neighbours[0].push_back(vVertexData[i][j+1].z); // right
         }
 
         // calcul moyenne (0.5 * sommet initial.y + 0.3 * sommets_directs.y + 0.2 * sommets_diagonales.y)
-        float y_average = 0.5 * mesh_.positions()[id].y;
+        float z_average = 0.5 * vVertexData[i][j].z;
 
         float sum = 0;
         for(unsigned int k = 0;k < neighbours[0].size();k++) {
-          sum += mesh_.positions()[neighbours[0][k]].y; 
+          sum += neighbours[0][k]; 
         }
-        y_average += 0.3 * (sum / neighbours[0].size()); // sommets directs
+        z_average += 0.3 * (sum / neighbours[0].size()); // sommets directs
 
         sum = 0;
         for(unsigned int k = 0;k < neighbours[1].size();k++) {
-          sum += mesh_.positions()[neighbours[1][k]].y;
+          sum += neighbours[1][k];
         }
-        y_average += 0.2 * (sum / neighbours[1].size()); // sommets diagonales
+        z_average += 0.2 * (sum / neighbours[1].size()); // sommets diagonales
 
         // maj du sommet avec la moyenne en y
-        vec3 v = mesh_.positions()[id];
-        mesh_.vertex(id, Point(v.x, y_average, v.z));
+        vVertexData[i][j].z = z_average;
 
-        /*if( id > width - 1 && id < width * height - 1 && id%width != 0 && (id+1)%width != 0 ) {
-          float y_average = 0.3 * mesh_.positions()[id].y + 
-                          0.10 * mesh_.positions()[id - 1].y + //left
-                          0.10 * mesh_.positions()[id + 1].y + // right
-                          0.10 * mesh_.positions()[id - width].y + // up
-                          0.10 * mesh_.positions()[id + width].y + // down
-                          0.075 * mesh_.positions()[id - width - 1].y + // up-left
-                          0.075 * mesh_.positions()[id - width + 1].y + // up-right
-                          0.075 * mesh_.positions()[id + width - 1].y + // down-left
-                          0.075 * mesh_.positions()[id + width + 1].y // down-right
-                          ;
-          vec3 v = mesh_.positions()[id];
-          mesh_.vertex(id, Point(v.x, y_average, v.z));
-        }*/
         id++;
         neighbours[0].clear();
         neighbours[1].clear();
@@ -227,66 +225,99 @@ void GeneratedTerrain::smooth(const unsigned int iterations) {
 }
 
 void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
-  float step = mesh_.positions().at(1).x - mesh_.positions().at(0).x;
+  float step = mesh_.positions().at(1).y - mesh_.positions().at(0).y;
 
-  float girdX = (float)to.x / (float)step;
-  float girdY = (float)to.y / (float)step;
-  int vertexTopIndex = (girdX) * 1024 + girdY;
-  int vertexBottomIndex = (girdX+1) * 1024 + girdY;
-
-  std::cout << girdX << " " << girdY << "; " << vertexTopIndex << " " << vertexBottomIndex << std::endl;
+  std::cout << Point(mesh_.positions().at(1)) << " ; " << Point(mesh_.positions().at(0)) << std::endl;
   std::cout << height << " " << width << "; " << step << std::endl;
 
-  Point tlflipped(mesh_.positions().at(vertexTopIndex));
-  Point trflipped(mesh_.positions().at(vertexTopIndex+1));
-  Point blflipped(mesh_.positions().at(vertexBottomIndex));
-  Point brflipped(mesh_.positions().at(vertexBottomIndex+1));
+  int girdX = to.x / step;
+  int girdY = to.y / step;
+  int vertexTopIndex = girdX * width + girdY;
+  int vertexBottomIndex = (girdX+1) * width + girdY;
 
-  Point tl(tlflipped.x, tlflipped.z, tlflipped.y);
-  Point tr(trflipped.x, trflipped.z, trflipped.y);
-  Point bl(blflipped.x, blflipped.z, blflipped.y);
-  Point br(brflipped.x, brflipped.z, brflipped.y);
+  std::cout << girdX << " " << girdY << "; " << vertexTopIndex << " " << vertexBottomIndex << std::endl;
+  
+  std::cout << "VOITURE : " << to << std::endl; 
+  std::cout << Point(mesh_.positions().at(0)) << " ; " << Point(mesh_.positions().at((width-1) * (height-1))) << std::endl;
+
+  if(vertexBottomIndex >= height * width || vertexTopIndex >= height * width 
+        || vertexTopIndex+1 >= height * width || vertexBottomIndex+1 >= height * width){
+    std::cerr << "***** ERROR : Player not on terrain *****" << std::endl;
+    n = Vector(0.f,0.f,1.f);
+    return;
+  }
+
+  int tl = vertexTopIndex;
+  int tr = vertexTopIndex + 1;
+  int bl = vertexBottomIndex;
+  int br = vertexBottomIndex + 1;
 
   std::cout << tl << "\t\t\t" << tr << std::endl; 
-  std::cout << "\t" << from << "\t" << to << std::endl;
+  std::cout << "\t\t\t" << to << std::endl;
   std::cout << bl << "\t\t\t" << br << std::endl;
 
   if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tl, bl, tr)){
-    to.z = std::max(to.z, ((GeneratedTerrain *)this)->getHeight(to, tl, bl, tr));
-    n = Vector(0,1,0);
+    to.z = ((GeneratedTerrain *)this)->getHeight(to, tl, bl, tr);
+    n = ((GeneratedTerrain *)this)->getNormal(to, tl, bl, tr);
   }
   else if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tr, bl, br)){
-    to.z = std::max(to.z, ((GeneratedTerrain *)this)->getHeight(to, tr, bl, br));
-    n = Vector(0,1,0);
+    to.z = ((GeneratedTerrain *)this)->getHeight(to, tr, bl, br);
+    n = ((GeneratedTerrain *)this)->getNormal(to, tr, bl, br);
   }
-  else
-    std::cerr << "ERROR : Terrain projection failed!" << std::endl;
+  else {
+    n = Vector(0.f,0.f,1.f);
+    std::cerr << "***** ERROR : Terrain projection failed! *****" << std::endl;
+  }
 }
 
-bool GeneratedTerrain::collideWithTriangleGird(Point pos, Point a, Point b, Point c){
+bool GeneratedTerrain::collideWithTriangleGird(Point pos, int ia, int ib, int ic){
+  Point a(mesh_.positions().at(ia));
+  Point b(mesh_.positions().at(ib));
+  Point c(mesh_.positions().at(ic));
+
   Vector ref = b - a;
   Vector target = pos - a;
-  float det1 = ref.x * target.y - ref.y * target.x;
+  float det1 = ref.y * target.x - ref.x * target.y;
 
   ref = c - b;
   target = pos - b;
-  float det2 = ref.x * target.y - ref.y * target.x;
+  float det2 = ref.y * target.x - ref.x * target.y;
 
   ref = a - c;
   target = pos - c;
-  float det3 = ref.x * target.y - ref.y * target.x;
+  float det3 = ref.y * target.x - ref.x * target.y;
 
   if(det1 <= 0 && det2 <= 0 && det3 <= 0)
     return true;
   return false;
 }
 
-float GeneratedTerrain::getHeight(Point pos, Point a, Point b, Point c){
+float GeneratedTerrain::getHeight(Point pos, int ia, int ib, int ic){
+  Point a(mesh_.positions().at(ia));
+  Point b(mesh_.positions().at(ib));
+  Point c(mesh_.positions().at(ic));
+
   float distA = distance(pos, a);
   float distB = distance(pos, b);
   float distC = distance(pos, c);
 
-  return (distA * a.y + distB * b.y + distC * c.y) / (distA + distB + distC);
+  return (distA * a.z + distB * b.z + distC * c.z) / (distA + distB + distC);
+}
+
+Vector GeneratedTerrain::getNormal(Point pos, int ia, int ib, int ic){
+  Point a(mesh_.positions().at(ia));
+  Point b(mesh_.positions().at(ib));
+  Point c(mesh_.positions().at(ic));
+
+  Vector aV(mesh_.normals().at(ia));
+  Vector bV(mesh_.normals().at(ib));
+  Vector cV(mesh_.normals().at(ic));
+
+  float distA = distance(pos, a);
+  float distB = distance(pos, b);
+  float distC = distance(pos, c);
+
+  return (distA * aV + distB * bV + distC * cV) / (distA + distB + distC);
 }
 
 void GeneratedTerrain::draw(const Transform& v, const Transform& p) {
