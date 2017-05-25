@@ -184,17 +184,28 @@ public:
         Transform view = updateCamera();
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
 
-        // dessine les véhicules et le terrain
+        /***** AFFICHAGE *****/
+        // VEHICULES
         draw(vehicule1_, player1_pos, view, projection) ;
         draw(vehicule2_, player2_pos, view, projection) ;
 
-        // dessiner avec le shader program
+        // TERRAIN
         glUseProgram(m_program);
+        // textures
         program_use_texture(m_program, "texture0", 0, textures[0], samplers[0]);
         program_use_texture(m_program, "texture1", 1, textures[1], samplers[1]);
         program_use_texture(m_program, "texture2", 2, textures[2], samplers[2]);
+
+        // phares
+        program_uniform(m_program, "spotP1Pos", joueur1_.getPosition());  
+        program_uniform(m_program, "spotP2Pos", joueur2_.getPosition());
+        program_uniform(m_program, "spotP1Dir", joueur1_.getDirection());
+        program_uniform(m_program, "spotP2Dir", joueur2_.getDirection());
+
+        // affichage
         terrain_.draw(m_program, Identity(), view, projection);
 
+        /***** CONTROLES *****/
         //reset
         if(key_state('r')) {
             Point bound_p1, bound_p2;

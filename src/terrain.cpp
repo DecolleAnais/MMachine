@@ -32,8 +32,6 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
   Transform transform = Scale(200,200,30);
   height = png_height/step;
   width = png_width/step;
-  std::cout << height << std::endl;
-  std::cout << width << std::endl;
 
   // creation of the terrain grid (vertex and texture)
   std::vector< std::vector< Vector > > vVertexData(width, std::vector< Vector >(height)); 
@@ -233,7 +231,7 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
 
   if(vertexBottomIndex >= height * width || vertexTopIndex >= height * width 
         || vertexTopIndex+1 >= height * width || vertexBottomIndex+1 >= height * width){
-    std::cerr << "***** ERROR : Player not on terrain *****" << std::endl;
+    //std::cerr << "***** ERROR : Player not on terrain *****" << std::endl;
     n = Vector(0.f,0.f,1.f);
     return;
   }
@@ -258,7 +256,7 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
   else {
     to.z = 0.f;
     n = Vector(0.f,0.f,1.f);
-    std::cerr << "***** ERROR : Terrain projection failed! *****" << std::endl;
+    //std::cerr << "***** ERROR : Terrain projection failed! *****" << std::endl;
   }
 }
 

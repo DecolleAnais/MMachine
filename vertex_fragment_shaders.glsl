@@ -13,42 +13,30 @@ uniform mat4 viewMatrix;
 uniform mat4 viewInvMatrix;
 
 out vec4 vCameraPos;
-out vec3 vWorldPos;
 out vec2 vTextCoord; // texture
 out vec3 vNormal; // normale
 out vec3 source;
-out vec4 vPosition;
+out vec4 vPositionMVP;
+out vec4 vPositionM;
 
 
 void main( )
 {
     // obligation du vertex shader : calculer les coordonnées du sommet dans le repère projectif homogene de la camera
-    vPosition = mvpMatrix * vec4(position, 1);
-    gl_Position = vPosition; 
+    vPositionM = modelMatrix * vec4(position, 1);
+    vPositionMVP = mvpMatrix * vec4(position, 1);
+    gl_Position = vPositionMVP; 
 
-    // vCameraPos = modelMatrix * viewMatrix * vec4(position, 1.0);
-
+    // Transfert des coordonnées de texture et des normales au fragment shader
     vTextCoord = textcoord;
     vNormal = mat3(normalMatrix) * normal;
 
-    // vec4 vWorldPosLocal = modelMatrix * position_scaled;
-    // vWorldPos = vWorldPosLocal.xyz;
-
-    // lumiere
-    // normale de la surface, dans le repere monde
-    // vec3 n = mat3(viewMatrix * modelMatrix) * normal;
-
     // position de la camera dans le repere du monde
-    vec4 sourceh = viewInvMatrix * vec4(0, 0, 0, 1);
-   
+    //vec4 sourceh = viewInvMatrix * vec4(0, 0, 0, 1);
+    vec4 sourceh = vec4(0,0,50,1);
+
     // rappel : mat4 * vec4 = vec4 homogene, pour retrouver le point / la direction reelle, il faut diviser par la 4ieme composante
     source = sourceh.xyz / sourceh.w;
-     
-    // direction entre le sommet et la source de lumiere
-    // vec3 l = source - position;
-    
-    // // calculer le cosinus de l'angle entre les 2 directions, a verifier...
-    // cos_theta = max(0, dot(normalize(n), normalize(l)));
 }
 #endif
 
@@ -60,73 +48,84 @@ out vec4 fragment_color;
 
 in vec2 vTextCoord; 
 in vec3 vNormal;
-in vec3 vWorldPos;
 in vec4 vCameraPos;
 in vec3 source;
-in vec4 vPosition;
+in vec4 vPositionM;
+in vec4 vPositionMVP;
 
 uniform sampler2D texture0;
 uniform sampler2D texture1;
 uniform sampler2D texture2;
-// uniform float fRenderHeight;
-// uniform float fMaxTextureU;
-// uniform float fMaxTextureV;
+
+uniform vec3 spotP1Pos;
+uniform vec3 spotP2Pos;
+uniform vec3 spotP1Dir;
+uniform vec3 spotP2Dir;
 
 void main( )
 {
-    vec3 l = source - vPosition.xyz / vPosition.w;
-    
-    // calculer le cosinus de l'angle entre les 2 directions, a verifier...
-    float cos_theta = max(0, dot(normalize(vNormal), normalize(l)));
-    //fragment_color = vec4(1, 1, 1, 1) * cos_theta;
-    vec4 grassColor = texture(texture1, vTextCoord) * texture(texture0, vTextCoord*30);
-    vec4 roadColor = (1-texture(texture1, vTextCoord)) * texture(texture2, vTextCoord*30);
+    // Spotlights
+    int on = 1;
+    vec4 spotLight = vec4(0.0, 0.0, 0.0, 0.0);
 
-    vec4 textureColor = grassColor + roadColor;
-    
-    fragment_color = textureColor * cos_theta;
+    if(on == 1){
+        // Parameters & vertex position in world reference
+        float coneCos = 0.85;
+        float attenuation = 0.4;
+        vec3 pos = vPositionM.xyz / vPositionM.w;
 
+        // Useful vars
+        float dist, cos, dif, factor;
+        vec3 lSpot;
 
+        // PLAYER 1 SPOTLIGTH'S
+        vec4 spotLightP1 = vec4(0.0, 0.0, 0.0, 0.0);
 
-    // TESTS TEXTURE
-    /*vec3 vNormalized = normalize(vNormal);
+        dist = distance(pos, spotP1Pos);
+        lSpot = normalize(pos - spotP1Pos);
 
-    fragment_color = vec4(0.0);
+        cos = dot(spotP1Dir, lSpot);
+        dif = 1.0 - coneCos;
+        factor = clamp((cos - coneCos)/dif, 0.0, 1.0);
 
-    float fScale = vWorldPos.y / fRenderHeight;
+        if(cos > coneCos)
+            spotLightP1 = vec4(1.0, 1.0, 1.0, 1.0) * factor/(dist * attenuation);
 
-    const float fRange1 = 0.15f;
-    const float fRange2 = 0.3f;
-    const float fRange3 = 0.65f;
-    const float fRange4 = 0.85f;
+        // PLAYER 2 SPOTLIGTH'S
+        vec4 spotLightP2 = vec4(0.0, 0.0, 0.0, 0.0);
 
-    if(fScale >= 0.0 && fScale <= fRange1) {
-        fragment_color = texture(texture0, vTextCoord);
-    }else if(fScale <= fRange2) {
-        fScale -= fRange1;
-        fScale /= (fRange2 - fRange1);
+        dist = distance(pos, spotP2Pos);
+        lSpot = normalize(pos - spotP2Pos);
 
-        float fScale2 = fScale;
-        fScale = 1.0 - fScale;
+        cos = dot(spotP2Dir, lSpot);
+        dif = 1.0 - coneCos;
+        factor = clamp((cos - coneCos)/dif, 0.0, 1.0);
 
-        fragment_color += texture(texture0, vTextCoord) * fScale; 
-        fragment_color += texture(texture1, vTextCoord) * fScale2; 
-    }else if(fScale <= fRange3) {
-        fragment_color = texture(texture1, vTextCoord);
-    }else if(fScale <= fRange4) {
-        fScale -= fRange3;
-        fScale /= (fRange4 - fRange3);
+        if(cos > coneCos)
+            spotLightP2 = vec4(1.0, 1.0, 1.0, 1.0) * factor/(dist * attenuation);
 
-        float fScale2 = fScale;
-        fScale = 1.0 - fScale;
+        // SUM
 
-        fragment_color += texture(texture1, vTextCoord) * fScale; 
-        fragment_color += texture(texture2, vTextCoord) * fScale2; 
-    }else {
-        fragment_color = texture(texture2, vTextCoord);
+        spotLight = spotLightP1 + spotLightP2;
     }
 
-    fragment_color *= cos_theta;*/
 
+    // Ambiant light
+    vec3 l = source - vPositionMVP.xyz / vPositionMVP.w;;
+    // calculer le cosinus de l'angle entre les 2 directions, a verifier...
+    float cos_theta = max(0, dot(normalize(vNormal), normalize(l)));
+    vec4 ambiantLight = vec4(1.0, 1.0, 1.0, 1.0) * 0.1 * cos_theta;
+
+    // Light on pixel
+    vec4 localLight = (vec4(0.2, 0.2, 0.2, 0.2) * cos_theta) + spotLight;
+
+    // Colors
+    vec4 grassColor = texture(texture1, vTextCoord) * texture(texture0, vTextCoord*30);
+    vec4 roadColor = (1-texture(texture1, vTextCoord)) * texture(texture2, vTextCoord*30);
+    vec4 textureColor = grassColor + roadColor;
+    
+
+    
+    fragment_color = textureColor * (ambiantLight + spotLight);
 }
 #endif

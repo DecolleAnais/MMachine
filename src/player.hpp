@@ -64,6 +64,15 @@ class Player {
      * Retourne la position en z du joueur.
      */
     float get_z();
+    /**
+     * Retourne la direction du joueur.
+     */
+    Vector getDirection();
+    /**
+     * Retourne la position du joueur.
+     */
+    Point getPosition();
+
 
     /**
      * Collisions
