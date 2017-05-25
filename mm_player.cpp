@@ -59,9 +59,29 @@ public:
         // joueur2_.set_bounding_box(p1, p2);
 
         // Init des textures
-        // textures[0] = read_texture(0, "data/papillon.png");
-        // textures[1] = read_texture(0, "data/debug2x2red.png");
-        // textures[2] = read_texture(0, "data/pacman.png");
+        textures.resize(2);
+        samplers.resize(2);
+
+        textures[0] = read_texture(0, "MMachine/textures/grass.png");
+        glGenSamplers(1, &samplers[0]);
+        glSamplerParameteri(samplers[0], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glSamplerParameteri(samplers[0], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glSamplerParameteri(samplers[0], GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glSamplerParameteri(samplers[0], GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        textures[1] = read_texture(1, "MMachine/textures/route.png");
+        glGenSamplers(1, &samplers[1]);
+        glSamplerParameteri(samplers[1], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glSamplerParameteri(samplers[1], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glSamplerParameteri(samplers[1], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glSamplerParameteri(samplers[1], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+        textures[2] = read_texture(2, "MMachine/textures/dirt.png");
+        glGenSamplers(1, &samplers[2]);
+        glSamplerParameteri(samplers[2], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glSamplerParameteri(samplers[2], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glSamplerParameteri(samplers[2], GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glSamplerParameteri(samplers[2], GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         // Init du shader
         m_program = read_program("MMachine/vertex_fragment_shaders.glsl");
@@ -83,9 +103,12 @@ public:
         release_program(m_program);
         vehicule1_.release();
         vehicule2_.release();
-        // glDeleteTextures(1, &textures[2]);   
-        // glDeleteTextures(1, &textures[1]);   
-        // glDeleteTextures(1, &textures[0]);   
+        glDeleteSamplers(1, &samplers[2]);
+        glDeleteSamplers(1, &samplers[1]);
+        glDeleteSamplers(1, &samplers[0]);
+        glDeleteTextures(1, &textures[2]);   
+        glDeleteTextures(1, &textures[1]);   
+        glDeleteTextures(1, &textures[0]);   
         return 0;
     }
     
@@ -126,8 +149,7 @@ public:
         pmax.y = oldPmax_.y + pmaxYS * delta;
 
         float dist = distance(pmin, pmax);
-        float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 20.0;
-        cameraDist = 45;
+        float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 15.0;
         //std::cout << dist << " " << cameraDist << std::endl;
         Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
         //std::cout << cameraPos << std::endl;
@@ -167,6 +189,10 @@ public:
         draw(vehicule2_, player2_pos, view, projection) ;
 
         // dessiner avec le shader program
+        glUseProgram(m_program);
+        program_use_texture(m_program, "texture0", 0, textures[0], samplers[0]);
+        program_use_texture(m_program, "texture1", 1, textures[1], samplers[1]);
+        program_use_texture(m_program, "texture2", 2, textures[2], samplers[2]);
         terrain_.draw(m_program, Identity(), view, projection);
 
         //reset
@@ -190,7 +216,8 @@ protected:
     KeyboardController controller2_ ;
 
     GeneratedTerrain terrain_;
-    GLuint* textures;
+    std::vector<GLuint> textures;
+    std::vector<GLuint> samplers;
 
     Point oldPmin_;
     Point oldPmax_;

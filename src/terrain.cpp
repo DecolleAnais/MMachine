@@ -23,7 +23,7 @@ std::string getCurrentPath(){
 // Generated Terrain
 GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_(GL_TRIANGLES){
   PngUtilities png;
-  std::string pathToMap = getCurrentPath() + "/../circuit.png";
+  std::string pathToMap = getCurrentPath() + "/../textures/circuit.png";
   png.init(pathToMap.c_str());
   unsigned int png_height = png.getHeight();
   unsigned int png_width = png.getWidth();
@@ -40,8 +40,8 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
   std::vector< std::vector< vec2 > > vCoordsData(width, std::vector< vec2 >(height)); 
 
   // size of the texture
-  float fTextureU = float(height) * 0.1f;
-  float fTextureV = float(width) * 0.1f;
+  float fTextureU = float(png_height);// * 0.1f;
+  float fTextureV = float(png_width);// * 0.1f;
 
   for(unsigned int i = 0;i < width;i++) {
     for(unsigned int j = 0;j < height;j++) {
@@ -52,7 +52,8 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
       float fVertexHeight = png.getValue(i*step, (height - j - 1)*step) / 255.0f;
       // add the coordinates of each vertex
       vVertexData[i][j] = transform(Vector(/*-0.5 +*/ fScaleH, /*-0.5 +*/ fScaleW, fVertexHeight));
-      vCoordsData[i][j] = vec2(fTextureU * fScaleW, fTextureV * fScaleH);
+      vCoordsData[i][j] = vec2(/*fTextureU **/ fScaleH , /*fTextureV **/ fScaleW);
+      //std::cout << vCoordsData[i][j].x << ";" << vCoordsData[i][j].y << std::endl;
     }
   }
   
@@ -218,11 +219,11 @@ void GeneratedTerrain::smooth(std::vector< std::vector< Vector > >& vVertexData,
 void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
   float step = mesh_.positions().at(1).y - mesh_.positions().at(0).y;
 
-  std::cout << Point(mesh_.positions().at(1)) << " ; " << Point(mesh_.positions().at(0)) << std::endl;
-  std::cout << height << " " << width << "; " << step << std::endl;
+  // std::cout << Point(mesh_.positions().at(1)) << " ; " << Point(mesh_.positions().at(0)) << std::endl;
+  // std::cout << height << " " << width << "; " << step << std::endl;
 
-  int girdX = to.x / step;
-  int girdY = to.y / step;
+  unsigned int girdX = to.x / step;
+  unsigned int girdY = to.y / step;
   unsigned int vertexTopIndex = girdX * width + girdY;
   unsigned int vertexBottomIndex = (girdX+1) * width + girdY;
 
@@ -317,7 +318,7 @@ void GeneratedTerrain::draw(const Transform& v, const Transform& p) {
 
 void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) {
   // configurer le pipeline 
-  glUseProgram(shaders_program);
+  //glUseProgram(shaders_program);
 
   // configurer le shader program
   // . composer les transformations : model, view et projection
