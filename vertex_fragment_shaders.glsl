@@ -28,7 +28,7 @@ void main( )
 
     // vCameraPos = modelMatrix * viewMatrix * vec4(position, 1.0);
 
-    // vTextCoord = textcoord;
+    vTextCoord = textcoord;
     vNormal = mat3(normalMatrix) * normal;
 
     // vec4 vWorldPosLocal = modelMatrix * position_scaled;
@@ -56,7 +56,7 @@ void main( )
 
 #ifdef FRAGMENT_SHADER
 
-out vec4 vTextColor;
+out vec4 fragment_color;
 
 in vec2 vTextCoord; 
 in vec3 vNormal;
@@ -78,14 +78,20 @@ void main( )
     
     // calculer le cosinus de l'angle entre les 2 directions, a verifier...
     float cos_theta = max(0, dot(normalize(vNormal), normalize(l)));
-    vTextColor = vec4(1, 1, 1, 1) * cos_theta;
+    //fragment_color = vec4(1, 1, 1, 1) * cos_theta;
+    vec4 grassColor = texture(texture1, vTextCoord) * texture(texture0, vTextCoord*30);
+    vec4 roadColor = (1-texture(texture1, vTextCoord)) * texture(texture2, vTextCoord*30);
+
+    vec4 textureColor = grassColor + roadColor;
+    
+    fragment_color = textureColor * cos_theta;
 
 
 
     // TESTS TEXTURE
     /*vec3 vNormalized = normalize(vNormal);
 
-    vTextColor = vec4(0.0);
+    fragment_color = vec4(0.0);
 
     float fScale = vWorldPos.y / fRenderHeight;
 
@@ -95,7 +101,7 @@ void main( )
     const float fRange4 = 0.85f;
 
     if(fScale >= 0.0 && fScale <= fRange1) {
-        vTextColor = texture(texture0, vTextCoord);
+        fragment_color = texture(texture0, vTextCoord);
     }else if(fScale <= fRange2) {
         fScale -= fRange1;
         fScale /= (fRange2 - fRange1);
@@ -103,10 +109,10 @@ void main( )
         float fScale2 = fScale;
         fScale = 1.0 - fScale;
 
-        vTextColor += texture(texture0, vTextCoord) * fScale; 
-        vTextColor += texture(texture1, vTextCoord) * fScale2; 
+        fragment_color += texture(texture0, vTextCoord) * fScale; 
+        fragment_color += texture(texture1, vTextCoord) * fScale2; 
     }else if(fScale <= fRange3) {
-        vTextColor = texture(texture1, vTextCoord);
+        fragment_color = texture(texture1, vTextCoord);
     }else if(fScale <= fRange4) {
         fScale -= fRange3;
         fScale /= (fRange4 - fRange3);
@@ -114,13 +120,13 @@ void main( )
         float fScale2 = fScale;
         fScale = 1.0 - fScale;
 
-        vTextColor += texture(texture1, vTextCoord) * fScale; 
-        vTextColor += texture(texture2, vTextCoord) * fScale2; 
+        fragment_color += texture(texture1, vTextCoord) * fScale; 
+        fragment_color += texture(texture2, vTextCoord) * fScale2; 
     }else {
-        vTextColor = texture(texture2, vTextCoord);
+        fragment_color = texture(texture2, vTextCoord);
     }
 
-    vTextColor *= cos_theta;*/
+    fragment_color *= cos_theta;*/
 
 }
 #endif
