@@ -126,8 +126,8 @@ public:
         pmax.y = oldPmax_.y + pmaxYS * delta;
 
         float dist = distance(pmin, pmax);
-        float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 10.0;
-        //cameraDist = 45;
+        float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 20.0;
+        cameraDist = 45;
         //std::cout << dist << " " << cameraDist << std::endl;
         Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
         //std::cout << cameraPos << std::endl;
@@ -156,7 +156,7 @@ public:
 
         // déplace les joueurs
         Transform player1_pos = joueur1_.transform() ;
-        //Transform player2_pos = joueur2_.transform() ;
+        Transform player2_pos = joueur2_.transform() ;
 
         // déplace la caméra & récupère la projection
         Transform view = updateCamera();
@@ -164,10 +164,9 @@ public:
 
         // dessine les véhicules et le terrain
         draw(vehicule1_, player1_pos, view, projection) ;
-        //draw(vehicule2_, player2_pos, view, projection) ;
+        draw(vehicule2_, player2_pos, view, projection) ;
 
         // dessiner avec le shader program
-        //terrain_.draw(m_program, RotationX(90) * Scale(1,1,1), view, projection);
         terrain_.draw(m_program, Identity(), view, projection);
 
         //reset

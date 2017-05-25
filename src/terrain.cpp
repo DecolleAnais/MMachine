@@ -29,7 +29,7 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
   unsigned int png_width = png.getWidth();
   step = 2; // 1 point sur 2 de l'image png est pris en compte dans la génération de terrain (pour lisser un peu le terrain)
 
-  Transform transform = Scale(50,50,10);
+  Transform transform = Scale(200,200,30);
   height = png_height/step;
   width = png_width/step;
   std::cout << height << std::endl;
@@ -58,7 +58,7 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
   
   // lissage du terrain
   // on fait une moyenne pondérée de la hauteur de chaque sommet en fonction de la hauteur de ses voisins, avec 20 itérations
-  //smooth(vVertexData, 20);
+  smooth(vVertexData, 20);
 
   // calculation of the triangles and their normal
 
@@ -123,10 +123,6 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
     }
   }
 
-
-  //Transform rotation = RotationX(90);
-  //Transform scale = Scale(100, 100, 20);
-  //Vector scale = Vector(100,20,100);
   // create the mesh
   for(unsigned int i = 0;i < width;i++) {
     for(unsigned int j = 0;j < height;j++) {
@@ -135,11 +131,6 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
       // add the texture
       mesh_.texcoord(vCoordsData[i][j]);
       // add the vertex
-      //Point unscaled_rotated_vertex = rotation((Point)vVertexData[i][j]);
-      //Point scaled_rotated_vertex = scale(unscaled_rotated_vertex);
-      //mesh_.vertex(scaled_rotated_vertex);
-      //Point unscaled_vertex = (Point)vVertexData[i][j];
-      //mesh_.vertex(Point(unscaled_vertex.x * scale.x, unscaled_vertex.y * scale.y, unscaled_vertex.z * scale.z));
       mesh_.vertex((Point)vVertexData[i][j]);
     }
   }
@@ -232,13 +223,12 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
 
   int girdX = to.x / step;
   int girdY = to.y / step;
-  int vertexTopIndex = girdX * width + girdY;
-  int vertexBottomIndex = (girdX+1) * width + girdY;
+  unsigned int vertexTopIndex = girdX * width + girdY;
+  unsigned int vertexBottomIndex = (girdX+1) * width + girdY;
 
-  std::cout << girdX << " " << girdY << "; " << vertexTopIndex << " " << vertexBottomIndex << std::endl;
-  
-  std::cout << "VOITURE : " << to << std::endl; 
-  std::cout << Point(mesh_.positions().at(0)) << " ; " << Point(mesh_.positions().at((width-1) * (height-1))) << std::endl;
+  // std::cout << girdX << " " << girdY << "; " << vertexTopIndex << " " << vertexBottomIndex << std::endl;
+  // std::cout << "VOITURE : " << to << std::endl; 
+  // std::cout << Point(mesh_.positions().at(0)) << " ; " << Point(mesh_.positions().at((width-1) * (height-1))) << std::endl;
 
   if(vertexBottomIndex >= height * width || vertexTopIndex >= height * width 
         || vertexTopIndex+1 >= height * width || vertexBottomIndex+1 >= height * width){
@@ -247,14 +237,14 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
     return;
   }
 
-  int tl = vertexTopIndex;
-  int tr = vertexTopIndex + 1;
-  int bl = vertexBottomIndex;
-  int br = vertexBottomIndex + 1;
+  unsigned int tl = vertexTopIndex;
+  unsigned int tr = vertexTopIndex + 1;
+  unsigned int bl = vertexBottomIndex;
+  unsigned int br = vertexBottomIndex + 1;
 
-  std::cout << tl << "\t\t\t" << tr << std::endl; 
-  std::cout << "\t\t\t" << to << std::endl;
-  std::cout << bl << "\t\t\t" << br << std::endl;
+  // std::cout << tl << "\t\t\t" << tr << std::endl; 
+  // std::cout << "\t\t\t" << to << std::endl;
+  // std::cout << bl << "\t\t\t" << br << std::endl;
 
   if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tl, bl, tr)){
     to.z = ((GeneratedTerrain *)this)->getHeight(to, tl, bl, tr);
@@ -265,6 +255,7 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
     n = ((GeneratedTerrain *)this)->getNormal(to, tr, bl, br);
   }
   else {
+    to.z = 0.f;
     n = Vector(0.f,0.f,1.f);
     std::cerr << "***** ERROR : Terrain projection failed! *****" << std::endl;
   }
@@ -346,9 +337,6 @@ void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Tran
   // program_use_texture(shaders_program, "texture1", 0, textures[1]);
   // program_use_texture(shaders_program, "texture2", 0, textures[2]);
 
-
-  //terrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
-  //generatedTerrain_.draw(m_camera.view(), m_camera.projection(window_width(), window_height(), 45.f)) ;
   mesh_.draw(shaders_program);
 }
 
