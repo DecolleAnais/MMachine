@@ -245,13 +245,29 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n) const {
   // std::cout << "\t\t\t" << to << std::endl;
   // std::cout << bl << "\t\t\t" << br << std::endl;
 
+  float slip = 0.05;
+  float slipCosAngle = 0.9;
   if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tl, bl, tr)){
     to.z = ((GeneratedTerrain *)this)->getHeight(to, tl, bl, tr);
     n = ((GeneratedTerrain *)this)->getNormal(to, tl, bl, tr);
+
+    // Glisade en pente
+    if(dot(n, Vector(0.f, 0.f, 1.f)) < slipCosAngle){
+      to.x += n.x * slip;
+      to.y += n.y * slip;
+      n = ((GeneratedTerrain *)this)->getNormal(to, tl, bl, tr);
+    }
   }
   else if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tr, bl, br)){
     to.z = ((GeneratedTerrain *)this)->getHeight(to, tr, bl, br);
     n = ((GeneratedTerrain *)this)->getNormal(to, tr, bl, br);
+
+    // Glissade en pente
+    if(dot(n, Vector(0.f, 0.f, 1.f)) < slipCosAngle){
+      to.x += n.x * slip;
+      to.y += n.y * slip;
+      n = ((GeneratedTerrain *)this)->getNormal(to, tl, bl, tr);
+    }
   }
   else {
     to.z = 0.f;
@@ -307,7 +323,7 @@ Vector GeneratedTerrain::getNormal(Point pos, int ia, int ib, int ic){
   float distB = distance(pos, b);
   float distC = distance(pos, c);
 
-  return (distA * aV + distB * bV + distC * cV) / (distA + distB + distC);
+  return normalize((distA * aV + distB * bV + distC * cV) / (distA + distB + distC));
 }
 
 void GeneratedTerrain::draw(const Transform& v, const Transform& p) {

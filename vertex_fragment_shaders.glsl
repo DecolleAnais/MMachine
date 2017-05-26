@@ -114,10 +114,10 @@ void main( )
     vec3 l = source - vPositionMVP.xyz / vPositionMVP.w;;
     // calculer le cosinus de l'angle entre les 2 directions, a verifier...
     float cos_theta = max(0, dot(normalize(vNormal), normalize(l)));
-    vec4 ambiantLight = vec4(1.0, 1.0, 1.0, 1.0) * 0.1 * cos_theta;
+    vec4 ambiantLight = vec4(1.0, 1.0, 1.0, 1.0) * cos_theta;
 
     // Light on pixel
-    vec4 localLight = (vec4(0.2, 0.2, 0.2, 0.2) * cos_theta) + spotLight;
+    vec4 localLight = (vec4(0.7, 0.7, 0.7, 1.0) * cos_theta) + spotLight;
 
     // Colors
     vec4 grassColor = texture(texture1, vTextCoord) * texture(texture0, vTextCoord*30);

@@ -40,23 +40,30 @@ public:
         Point bound_p1, bound_p2;
         joueur1_.set_terrain(&terrain_) ;
         joueur1_.set_controller(&controller1_) ;
-        joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0), bound_p1, bound_p2) ;
-        joueur1_.activate() ;
-
         joueur2_.set_terrain(&terrain_) ;
         joueur2_.set_controller(&controller2_) ;
-        joueur2_.spawn_at(Point(1,1,0), Vector(0,1,0), bound_p1, bound_p2) ;
+        
+        joueur1_.setOtherPlayer(joueur2_);
+        joueur2_.setOtherPlayer(joueur1_);
+
+        joueur1_.spawn_at(Point(89.0,27.0,0), Vector(1,0,0), bound_p1, bound_p2) ;
+        joueur1_.activate() ;
+        joueur2_.spawn_at(Point(89.0,25.0,0), Vector(1,0,0), bound_p1, bound_p2) ;
         joueur2_.activate() ;
 
-        oldPmin_ = Point(0.f, 0.f, 10.f);
-        oldPmax_ = Point(1.f, 1.f, 10.f);
+        oldPmin_ = Point(std::min(joueur1_.get_x(), joueur2_.get_x()),
+                    std::min(joueur1_.get_y(), joueur2_.get_y()),
+                    std::max(joueur1_.get_z(), joueur2_.get_z()));
+        oldPmax_ = Point(std::max(joueur1_.get_x(), joueur2_.get_x()),
+                    std::max(joueur1_.get_y(), joueur2_.get_y()),
+                    std::max(joueur1_.get_z(), joueur2_.get_z()));
 
         // Init des boites englobantes
-        // Point p1, p2;
-        // vehicule1_.bounds(p1, p2);
-        // joueur1_.set_bounding_box(p1, p2);
-        // vehicule2_.bounds(p1, p2);
-        // joueur2_.set_bounding_box(p1, p2);
+        Point p1, p2;
+        vehicule1_.bounds(p1, p2);
+        joueur1_.set_bounding_box(p1, p2);
+        vehicule2_.bounds(p1, p2);
+        joueur2_.set_bounding_box(p1, p2);
 
         // Init des textures
         textures.resize(2);

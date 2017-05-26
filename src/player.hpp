@@ -72,19 +72,18 @@ class Player {
      * Retourne la position du joueur.
      */
     Point getPosition();
-
-
     /**
-     * Collisions
+     * Set l'autre joueur pour les collisions
      */
-    bool collide(Mesh player);
-    
+    void setOtherPlayer(Player& player);  
+    std::vector<Point> getCornerPoints();  
     
   private :
 
     //environment
     const Terrain* terrain_ ;
     void project(Point& candidate) ;
+    Player* playerToCollide_;
 
     //control
     bool forward_ ;
@@ -96,15 +95,15 @@ class Player {
     Vector speed_ ;
     int last_time_ ;
     void step() ;
-    void collide();
-    bool collideWithTerrain();
-    bool collideWithPlayer(Mesh player);
+    bool collide(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm);
+    bool collideWithTerrain(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm);
+    bool collideWithPlayer(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm);
 
     //elements
     Point position_ ;
     Vector direction_ ;
     Vector normal_ ;
-    std::vector<Point> bounding_box_;
+    float sizeX_, sizeY_, sizeZ_;
 
     //parameters
     float acceleration_ ;
