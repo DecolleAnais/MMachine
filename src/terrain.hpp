@@ -51,6 +51,7 @@ class GeneratedTerrain : public Terrain {
         void project(const Point& from, Point& to, Vector& n) const ;
         void draw(const Transform& v, const Transform& p) ;
         void draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
+        void release() ;
 
     private :
         Mesh mesh_ ;
