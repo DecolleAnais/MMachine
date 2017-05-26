@@ -27,9 +27,9 @@ public:
       controller1_(SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT),
       controller2_('z', 's', 'q', 'd'),
       terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f)),
-      max_points_(4),
-      points_player1_(2)
-      //score_(m_window)
+      max_score_(4),
+      score_player1_(2),
+      score_(max_score_)
     {}
     
     int init( )
@@ -113,12 +113,15 @@ public:
         glDeleteTextures(1, &textures[2]);   
         glDeleteTextures(1, &textures[1]);   
         glDeleteTextures(1, &textures[0]);
-        //score_.release();
+        terrain_.release();
+        score_.release();
         return 0;
     }
     
     /************* MAJ CAMERA + DETECTION JOUEUR EN RETARD/SCORE *************/
-    Transform updateCamera(){
+    int updateCamera(Transform& view){
+        /************* INIT VARIABLE RETARD DETECTE/CHANGEMENT DE SCORE *************/
+        int score_updated = 0;
 
         /************* CENTRAGE CAMERA SUR LES JOUEURS *************/
         // centre la caméra
@@ -142,15 +145,21 @@ public:
         if(length(pmax - pmin) >= maxDistPlayers) {
             // calcul des points selon qui est premier
             //if(first() == 1) {
-            if(1 == 1) {
-                points_player1_++;
-                if(points_player1_ == max_points_) {
-                    // fin du jeu, joueur 1 gagnant
-                }
-            } else {
-                points_player1_--;
-                if(points_player1_ == 0) {
-                    // fin du jeu, joueur 2 gagnant
+            if(score_player1_ > 0 && score_player1_ < max_score_) {
+                if(1 == 1) {
+                    score_player1_++;
+                    score_updated = 1;
+                    if(score_player1_ == max_score_) {
+                        // fin du jeu, joueur 1 gagnant
+                        score_updated = -1;
+                    }
+                } else {
+                    score_player1_--;
+                    score_updated = 2;
+                    if(score_player1_ == 0) {
+                        // fin du jeu, joueur 2 gagnant
+                        score_updated = -2;
+                    }
                 }
             }
 
@@ -183,7 +192,9 @@ public:
         oldPmin_ = pmin;
         oldPmax_ = pmax;
 
-        return Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
+        view = Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
+
+        return score_updated;
     }
 
     /************* DESSIN *************/
@@ -197,7 +208,8 @@ public:
 
         /************* DEPLACEMENT CAMERA *************/
         // déplace la caméra & récupère la projection
-        Transform view = updateCamera();
+        Transform view;
+        updateCamera(view);
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
 
         /************* DESSIN VEHICULES *************/
@@ -221,9 +233,10 @@ public:
 
         /************* DESSIN COURBES DE BEZIER *************/
         
+        
 
         /************** AFFICHAGE SCORE ******************/
-        //score_.draw(points_player1_);
+        score_.draw(score_player1_);
 
         /************** COMMANDES CLAVIER ****************/
         //reset
@@ -260,9 +273,9 @@ protected:
 
     GLuint m_program;
 
-    unsigned int max_points_;
-    unsigned int points_player1_;
-    //ScoreDisplay score_;
+    unsigned int max_score_;
+    unsigned int score_player1_;
+    ScoreDisplay score_;
 };
 
 

@@ -1,4 +1,3 @@
-- collisions entre voitures
 - splines cubiques pour les segments de fonctions représentant le chemin
 - position d'une voiture par rapport au chemin
 - savoir qui est premier

@@ -339,6 +339,10 @@ void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Tran
   mesh_.draw(shaders_program);
 }
 
+void GeneratedTerrain::release() {
+  mesh_.release();
+}
+
 //Flat Terrain
 
 FlatTerrain::FlatTerrain(const Point& pmin, const Point& pmax) : mesh_(GL_TRIANGLES) {
@@ -348,8 +352,8 @@ FlatTerrain::FlatTerrain(const Point& pmin, const Point& pmax) : mesh_(GL_TRIANG
   unsigned int c = mesh_.vertex(pmax.x, pmax.y, 0.f) ;
   unsigned int d = mesh_.vertex(pmin.x, pmax.y, 0.f) ;
 
-  mesh_.triangle(a, b, c) ;
-  mesh_.triangle(a, c, d) ;
+  mesh_.triangle(a, c, b) ;
+  mesh_.triangle(a, d, c) ;
 }
 
 void FlatTerrain::project(const Point& from, Point& to, Vector& n) const {
