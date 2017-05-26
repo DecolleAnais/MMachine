@@ -213,3 +213,11 @@ bool Player::collideWithPlayer(Mesh player){
   return false;
 }
 
+Vector Player::getDirection(){
+  return direction_;
+}
+
+Point Player::getPosition(){
+  return position_;
+}
+

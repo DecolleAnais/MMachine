@@ -195,7 +195,6 @@ public:
         Transform player1_pos = joueur1_.transform() ;
         Transform player2_pos = joueur2_.transform() ;
 
-
         /************* DEPLACEMENT CAMERA *************/
         // déplace la caméra & récupère la projection
         Transform view = updateCamera();
@@ -207,12 +206,15 @@ public:
 
         /************* CONFIG SHADER *************/
         glUseProgram(m_program);
-        
+        // textures
         program_use_texture(m_program, "texture0", 0, textures[0], samplers[0]);
-        
         program_use_texture(m_program, "texture1", 1, textures[1], samplers[1]);
-
         program_use_texture(m_program, "texture2", 2, textures[2], samplers[2]);
+        // phares
+        program_uniform(m_program, "spotP1Pos", joueur1_.getPosition());  
+        program_uniform(m_program, "spotP2Pos", joueur2_.getPosition());
+        program_uniform(m_program, "spotP1Dir", joueur1_.getDirection());
+        program_uniform(m_program, "spotP2Dir", joueur2_.getDirection());
 
         /************* DESSIN TERRAIN *************/
         terrain_.draw(m_program, Identity(), view, projection);
