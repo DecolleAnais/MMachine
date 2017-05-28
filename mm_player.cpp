@@ -44,7 +44,6 @@ public:
         vehicule2_.default_color(Color(0.0f, 0.f, 1.f)) ;
 
         /************* INIT JOUEURS *************/
-        Point bound_p1, bound_p2;
         joueur1_.set_terrain(&terrain_) ;
         joueur1_.set_controller(&controller1_) ;
         joueur2_.set_terrain(&terrain_) ;
@@ -53,9 +52,9 @@ public:
         joueur1_.setOtherPlayer(joueur2_);
         joueur2_.setOtherPlayer(joueur1_);
 
-        joueur1_.spawn_at(Point(89.0,27.0,0), Vector(1,0,0), bound_p1, bound_p2) ;
+        joueur1_.spawn_at(Point(89.0,27.0,0), Vector(1,0,0)) ;
         joueur1_.activate() ;
-        joueur2_.spawn_at(Point(89.0,25.0,0), Vector(1,0,0), bound_p1, bound_p2) ;
+        joueur2_.spawn_at(Point(89.0,25.0,0), Vector(1,0,0)) ;
         joueur2_.activate() ;
 
         oldPmin_ = Point(std::min(joueur1_.get_x(), joueur2_.get_x()),
@@ -118,7 +117,7 @@ public:
         return 0;   // ras, pas d'erreur
     }
     
-    /************* DESTRUCTION OBJETS DE L'APPLICATION *************/
+
     int quit( )
     {
         release_program(m_program);
@@ -136,102 +135,120 @@ public:
         return 0;
     }
     
-    /************* MAJ CAMERA + DETECTION JOUEUR EN RETARD/SCORE *************/
-    int updateCamera(Transform& view){
-        /************* INIT VARIABLE RETARD DETECTE/CHANGEMENT DE SCORE *************/
-        int score_updated = 0;
-
-        /************* CENTRAGE CAMERA SUR LES JOUEURS *************/
-        // centre la caméra
-        Point pmin(std::min(joueur1_.get_x(), joueur2_.get_x()),
+    
+    Transform updateCamera(int score){
+        /* Sélection des points décrivant la boite englobantes des joueurs à afficher */
+        Point pminT, pmaxT;
+        // Pas de premier, on centre la caméra entre les deux joueurs
+        if(score == -1){
+            pminT = Point(std::min(joueur1_.get_x(), joueur2_.get_x()),
                     std::min(joueur1_.get_y(), joueur2_.get_y()),
                     std::max(joueur1_.get_z(), joueur2_.get_z()));
-        Point pmax(std::max(joueur1_.get_x(), joueur2_.get_x()),
+            pmaxT = Point(std::max(joueur1_.get_x(), joueur2_.get_x()),
                     std::max(joueur1_.get_y(), joueur2_.get_y()),
                     std::max(joueur1_.get_z(), joueur2_.get_z()));
+        }
+        // Joueur 1 premier
+        else if(score == 0){
+            pminT = joueur1_.getPosition();
+            pmaxT = joueur1_.getPosition();
+        }
+        // Joueur 2 premier
+        else if(score == 1){
+            pminT = joueur2_.getPosition();
+            pmaxT = joueur2_.getPosition();
+        }
+        else
+            throw std::invalid_argument("Parameter score is ranged in [-1; numLastPlayer - 1].");
 
+        /* Calcul du déplacement de la caméra */
         Clock::time_point time = Clock::now();
         float delta = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - oldTime_).count() / 1000.0;
         oldTime_ = time;
 
-
-        /************* DETECTION RETARD D'UN JOUEUR *************/
-        // détection d'un trop grand champ de caméra, recentre la caméra sur le joueur 1
         float coeffSpeed = 7.5;
-        float maxDistPlayers = 27.0f;
-        Point pminT, pmaxT;
-        if(length(pmax - pmin) >= maxDistPlayers) {
-            // calcul des points selon qui est premier
-            //if(first() == 1) {
-            if(score_player1_ > 0 && score_player1_ < max_score_) {
-                if(1 == 1) {
-                    score_player1_++;
-                    score_updated = 1;
-                    if(score_player1_ == max_score_) {
-                        // fin du jeu, joueur 1 gagnant
-                        score_updated = -1;
-                    }
-                } else {
-                    score_player1_--;
-                    score_updated = 2;
-                    if(score_player1_ == 0) {
-                        // fin du jeu, joueur 2 gagnant
-                        score_updated = -2;
-                    }
-                }
-            }
-
-            pminT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
-            pmaxT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
-        }
-        else{
-            pminT = pmin;
-            pmaxT = pmax;
-        }
-        
-        /************* DEPLACEMENT CAMERA *************/
         float pminXS = (pminT.x - oldPmin_.x) * coeffSpeed;
         float pminYS = (pminT.y - oldPmin_.y) * coeffSpeed;
+        float pminZS = (pminT.z - oldPmin_.z) * coeffSpeed;
         float pmaxXS = (pmaxT.x - oldPmax_.x) * coeffSpeed;
         float pmaxYS = (pmaxT.y - oldPmax_.y) * coeffSpeed;
+        float pmaxZS = (pmaxT.z - oldPmax_.z) * coeffSpeed;
         
+        Point pmin, pmax;
         pmin.x = oldPmin_.x + pminXS * delta;
         pmin.y = oldPmin_.y + pminYS * delta;
+        pmin.z = oldPmin_.z + pminZS * delta;
         pmax.x = oldPmax_.x + pmaxXS * delta;
         pmax.y = oldPmax_.y + pmaxYS * delta;
+        pmax.z = oldPmax_.z + pmaxZS * delta;
 
+        /* Calcul de la hauteur de la caméra */
         float dist = distance(pmin, pmax);
-        float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 15.0;
-        //std::cout << dist << " " << cameraDist << std::endl;
-        Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
-        //std::cout << cameraPos << std::endl;
+        Point centerCamera(center(pmin, pmax));
+        float cameraDist = centerCamera.z + dist/10.0 + 5.0;
+        Point cameraPos = centerCamera + Vector(0, 0, std::max(0.0f, cameraDist));
 
+        /* Mise a jour des anciennes positions */
         oldPmin_ = pmin;
         oldPmax_ = pmax;
 
-        view = Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
-
-        return score_updated;
+        return Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
     }
 
-    /************* DESSIN *************/
-    int render( )
-    {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    int updateScores(){
+        int score_updated = 0;
+
+        if(distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
+            return 0;
+        }
+        return -1;
+
+        /************* DETECTION RETARD D'UN JOUEUR *************/
+        // détection d'un trop grand champ de caméra, recentre la caméra sur le joueur 1
+        // float coeffSpeed = 7.5;
+        // float maxDistPlayers = 27.0f;
+        // Point pminT, pmaxT;
+        // if(length(pmax - pmin) >= maxDistPlayers) {
+        //     // calcul des points selon qui est premier
+        //     //if(first() == 1) {
+        //     if(score_player1_ > 0 && score_player1_ < max_score_) {
+        //         if(1 == 1) {
+        //             score_player1_++;
+        //             score_updated = 1;
+        //             if(score_player1_ == max_score_) {
+        //                 // fin du jeu, joueur 1 gagnant
+        //                 score_updated = -1;
+        //             }
+        //         } else {
+        //             score_player1_--;
+        //             score_updated = 2;
+        //             if(score_player1_ == 0) {
+        //                 // fin du jeu, joueur 2 gagnant
+        //                 score_updated = -2;
+        //             }
+        //         }
+        //     }
+
+        //     pminT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
+        //     pmaxT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
+        // }
+        // else{
+        //     pminT = pmin;
+        //     pmaxT = pmax;
+        // }
+    }
+
+    void updateScene(){
         /************* DEPLACEMENT JOUEURS *************/
-        Transform player1_pos = joueur1_.transform() ;
-        Transform player2_pos = joueur2_.transform() ;
+        joueur1_.step();
+        joueur2_.step();
+    }
 
-        /************* DEPLACEMENT CAMERA *************/
-        // déplace la caméra & récupère la projection
-        Transform view;
-        updateCamera(view);
-        Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
-
+    void renderScene(const Transform& view, const Transform& projection){
         /************* DESSIN VEHICULES *************/
-        draw(vehicule1_, player1_pos, view, projection) ;
-        draw(vehicule2_, player2_pos, view, projection) ;
+        draw(vehicule1_, joueur1_.transform(), view, projection) ;
+        draw(vehicule2_, joueur2_.transform(), view, projection) ;
 
         /************* CONFIG SHADER *************/
         glUseProgram(m_program);
@@ -247,22 +264,39 @@ public:
 
         /************* DESSIN TERRAIN *************/
         terrain_.draw(m_program, Identity(), view, projection);
+    }
 
-        /************* DESSIN CHEMIN *************/
-        //terrain_.drawCheckpoints(Identity(), view, projection);
-        
+    /************* DESSIN *************/
+    int render( )
+    {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /************** AFFICHAGE SCORE ******************/
+        /* Mise à jour de la scene et du score */
+        updateScene();
+        int result = updateScores();
+
+        /* Déplace la caméra & récupère la projection */
+        Transform view = updateCamera(result);
+        Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
+
+        /* Affichage de la scene et de l'interface */ 
+        renderScene(view, projection);
         score_.draw(score_player1_);
 
-        /************** COMMANDES CLAVIER ****************/
+        /* Contrôles clavier */
         //reset
         if(key_state('r')) {
-            Point bound_p1, bound_p2;
-            vehicule1_.bounds(bound_p1, bound_p2);   // points de la boite englobante du mesh
-
-            joueur1_.spawn_at(Point(0,0,0), Vector(0,1,0), bound_p1, bound_p2) ;
+            joueur1_.spawn_at(Point(89.0,27.0,0), Vector(1,0,0)) ;
             joueur1_.activate() ;
+            joueur2_.spawn_at(Point(89.0,25.0,0), Vector(1,0,0)) ;
+            joueur2_.activate() ;
+
+            oldPmin_ = Point(std::min(joueur1_.get_x(), joueur2_.get_x()),
+                        std::min(joueur1_.get_y(), joueur2_.get_y()),
+                        std::max(joueur1_.get_z(), joueur2_.get_z()));
+            oldPmax_ = Point(std::max(joueur1_.get_x(), joueur2_.get_x()),
+                        std::max(joueur1_.get_y(), joueur2_.get_y()),
+                        std::max(joueur1_.get_z(), joueur2_.get_z()));
         }
 
         return 1;
