@@ -1,4 +1,5 @@
 #include "terrain.hpp"
+#include "parser.hpp"
 #include "draw.h"
 #include "image_io.h"
 #include "pngUtilities.hpp"
@@ -147,6 +148,9 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
                     i * height + (j + 1));
     }
   }
+
+  // initialize the checkpoints on the terrain
+  setCheckpoints(transform);
 
   png.free();
 }
@@ -355,8 +359,76 @@ void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Tran
   mesh_.draw(shaders_program);
 }
 
+void GeneratedTerrain::setCheckpoints(Transform transform) {
+    unsigned int w = 1024;
+    unsigned int h = 1024;
+
+    // lecture des fichiers contenant les coordoonées des points
+    Parser parser_points = Parser("MMachine/textures/path_points.txt");
+    Parser parser_points_radius = Parser("MMachine/textures/path_points_radius.txt");
+
+    assert(parser_points.getNbLines() == parser_points_radius.getNbLines());
+
+    // création des checkpoints et ajout à la liste
+    for(unsigned int i = 0;i < parser_points.getNbLines() - 1;i++) {
+      Checkpoint c;
+      c.center = Point(parser_points.get(i,0), parser_points.get(i,1), 0);
+      c.radius_point = Point(parser_points_radius.get(i, 0), parser_points_radius.get(i,1), 0);
+      checkpoints_.push_back(c);
+    }
+    // TODO radius doit être initialisé après que le point 2 (du rayon) ait été transformé
+
+    for(Checkpoint &check : checkpoints_) {
+      // normalisation et transformation du point au centre du checkpoint
+      check.center.x = check.center.x / (w - 1);
+      check.center.y = 1-(check.center.y / (h - 1));  // 1 - la valeur en y car les coordonnées données viennent d'un png, et les y sont inversés
+      check.center = transform(check.center);
+      check.center.z = 20;
+
+      // normalisation et transformation du point sur le rayon
+      check.radius_point.x = check.radius_point.x / (w - 1);
+      check.radius_point.y = 1-(check.radius_point.y / (h - 1));  // 1 - la valeur en y car les coordonnées données viennent d'un png, et les y sont inversés
+      check.radius_point = transform(check.radius_point);
+      check.radius_point.z = 20;
+
+      // init du rayon
+      check.radius = distance(check.center, check.radius_point);
+    }
+    // TODO convertir les vector en points
+    Point  p1, p2;
+    for(unsigned int i = 0;i < checkpoints_.size();i++) {
+      p1 = checkpoints_[i].center;
+      if(i == checkpoints_.size()-1) {
+        p2 = checkpoints_[0].center;
+      }else {
+        p2 = checkpoints_[i+1].center;
+      }
+      
+      Mesh mesh(GL_LINES);
+      mesh.color(Red());
+      mesh.vertex(p1.x, p1.y, p1.z);
+      mesh.vertex(p2.x, p2.y, p2.z);
+      meshs_checkpoints_.push_back(mesh);
+      mesh.release();
+    }
+}
+
+void GeneratedTerrain::drawCheckpoints(Transform model, Transform view, Transform proj) {
+  for(Mesh m : meshs_checkpoints_) {
+    ::draw(m, model, view, proj);
+  }
+}
+
+
+std::vector<Checkpoint> GeneratedTerrain::getCheckpoints() const {
+  return checkpoints_;
+}
+
 void GeneratedTerrain::release() {
   mesh_.release();
+  for(Mesh m : meshs_checkpoints_) {
+    m.release();
+  }
 }
 
 //Flat Terrain

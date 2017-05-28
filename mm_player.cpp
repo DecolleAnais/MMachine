@@ -2,6 +2,8 @@
 #include "src/controller.hpp"
 #include "src/player.hpp"
 #include "src/scoreDisplay.hpp"
+#include "src/bezierPath.hpp"
+#include "src/parser.hpp"
 
 #include "mat.h"
 #include "wavefront.h"
@@ -29,7 +31,8 @@ public:
       terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f)),
       max_score_(4),
       score_player1_(2),
-      score_(max_score_)
+      score_(max_score_),
+      bezierPath_()
     {}
     
     int init( )
@@ -62,12 +65,19 @@ public:
                     std::max(joueur1_.get_y(), joueur2_.get_y()),
                     std::max(joueur1_.get_z(), joueur2_.get_z()));
 
-        // Init des boites englobantes
+        /************* INIT BOITES ENGLOBANTES *************/
         Point p1, p2;
         vehicule1_.bounds(p1, p2);
         joueur1_.set_bounding_box(p1, p2);
         vehicule2_.bounds(p1, p2);
         joueur2_.set_bounding_box(p1, p2);
+
+        /************* INIT CHEMIN DE BEZIER *************/
+        Vector a(-0.3, -0.7 , -1);
+        Vector b(-0.9, 0.3, -1);
+        Vector c(-0.7, 0.9, -1);
+        Vector d(0.5, 0.1, -1);
+        bezierPath_.makePath(a, b, c, d);
 
         /************* INIT TEXTURES *************/
         textures.resize(2);
@@ -122,6 +132,7 @@ public:
         glDeleteTextures(1, &textures[0]);
         terrain_.release();
         score_.release();
+        bezierPath_.release();
         return 0;
     }
     
@@ -191,7 +202,6 @@ public:
 
         float dist = distance(pmin, pmax);
         float cameraDist = (-1.0 * powf(dist, 2.0) / maxDistPlayers) + (2.0 * dist) + 15.0;
-        cameraDist = 45;
         //std::cout << dist << " " << cameraDist << std::endl;
         Point cameraPos = center(pmin, pmax) + Vector(0, 0, std::max(0.0f, cameraDist));
         //std::cout << cameraPos << std::endl;
@@ -238,8 +248,8 @@ public:
         /************* DESSIN TERRAIN *************/
         terrain_.draw(m_program, Identity(), view, projection);
 
-        /************* DESSIN COURBES DE BEZIER *************/
-        
+        /************* DESSIN CHEMIN *************/
+        //terrain_.drawCheckpoints(Identity(), view, projection);
         
 
         /************** AFFICHAGE SCORE ******************/
@@ -283,6 +293,8 @@ protected:
     unsigned int max_score_;
     unsigned int score_player1_;
     ScoreDisplay score_;
+
+    BezierPath bezierPath_;
 };
 
 

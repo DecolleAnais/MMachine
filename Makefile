@@ -130,9 +130,11 @@ OBJECTS := \
 	$(OBJDIR)/orbiter.o \
 	$(OBJDIR)/terrain.o \
 	$(OBJDIR)/player.o \
+	$(OBJDIR)/bezierPath.o \
 	$(OBJDIR)/controller.o \
 	$(OBJDIR)/scoreDisplay.o \
 	$(OBJDIR)/pngUtilities.o \
+	$(OBJDIR)/parser.o \
 	$(OBJDIR)/mm_player.o \
 
 RESOURCES := \
@@ -260,6 +262,9 @@ $(OBJDIR)/terrain.o: src/terrain.cpp
 $(OBJDIR)/player.o: src/player.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/bezierPath.o: src/bezierPath.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/controller.o: src/controller.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
@@ -267,6 +272,9 @@ $(OBJDIR)/scoreDisplay.o: src/scoreDisplay.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/pngUtilities.o: src/pngUtilities.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/parser.o: src/parser.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/mm_player.o: mm_player.cpp

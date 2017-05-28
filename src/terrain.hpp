@@ -43,6 +43,11 @@ class FlatTerrain : public Terrain {
     Mesh mesh_ ;
 } ;
 
+struct Checkpoint {
+    Point center;
+    Point radius_point;
+    float radius;
+};
 
 class GeneratedTerrain : public Terrain {
     public :
@@ -51,6 +56,10 @@ class GeneratedTerrain : public Terrain {
         void project(const Point& from, Point& to, Vector& n) const ;
         void draw(const Transform& v, const Transform& p) ;
         void draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
+        void setCheckpoints(Transform transform) ;
+        void drawCheckpoints(Transform model, Transform view, Transform proj);
+        std::vector<Checkpoint> getCheckpoints() const;
+
         void release() ;
 
     private :
@@ -61,6 +70,8 @@ class GeneratedTerrain : public Terrain {
         float getHeight(Point pos, int ia, int ib, int ic);
         Vector getNormal(Point pos, int ia, int ib, int ic);
         unsigned int step; // un point sur step est pris en compte dans la génération du terrain (depuis l'image png)
+        std::vector<Checkpoint> checkpoints_;
+        std::vector<Mesh> meshs_checkpoints_;
 } ;
 
 
