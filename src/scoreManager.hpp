@@ -14,10 +14,13 @@ class ScoreManager {
   	void updateCheckpoints(Point player_1_position, Point player_2_position);
   	void updateScore(int first);
   	int getRoundWinner();
+  	int getWinner();
+  	unsigned int getEcartCheckpoints();
   	void resetRound();
   	bool end();
   	void draw();
-  	void drawCongratulations();
+  	void drawRoundWinner();
+  	void drawWinner();
     void release();
 
 private:

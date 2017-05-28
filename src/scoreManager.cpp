@@ -100,20 +100,26 @@ int ScoreManager::getFirst(Point player_1_position, Point player_2_position) {
 
 void ScoreManager::updateScore(int first) {
 	switch(first) {
-		case 0 : score_player_1_++; round_winner_ = 0; 
-				default_color(text, Color(1.0, 0.0, 0.0, 1.0));
-				print(text, 50, 0, "Player 1 wins this round !"); 
-				break;
-		case 1 : score_player_1_--; round_winner_ = 1; 
-				default_color(text, Color(0.0, 0.0, 1.0, 1.0));
-				print(text, 50, 0, "Player 2 wins this round !"); 
-				break;
+		case 0 : score_player_1_++; round_winner_ = 0; break;
+		case 1 : score_player_1_--; round_winner_ = 1; break;
 		default : ;
 	}
 }
 
 int ScoreManager::getRoundWinner() {
 	return round_winner_;
+}
+
+int ScoreManager::getWinner() {
+	if(score_player_1_ == max_score_) {
+		return 0;
+	}else {
+		return 1;
+	} 
+}
+
+unsigned int ScoreManager::getEcartCheckpoints() {
+	return abs(checkpoint_player_1_ - checkpoint_player_2_);
 }
 
 void ScoreManager::resetRound() {
@@ -148,7 +154,25 @@ void ScoreManager::draw() {
 	}
 }
 
-void ScoreManager::drawCongratulations() {
+void ScoreManager::drawRoundWinner() {
+	if(getRoundWinner() == 0) {
+		default_color(text, Color(1.0, 0.0, 0.0, 1.0));
+		print(text, 50, 0, "Player 1 wins this round !"); 
+	}else {
+		default_color(text, Color(0.0, 0.0, 1.0, 1.0));
+		print(text, 50, 0, "Player 2 wins this round !"); 
+	}
+	::draw(text, window_width(), window_height()/2);
+}
+
+void ScoreManager::drawWinner() {
+	if(getWinner() == 0) {
+		default_color(text, Color(1.0, 0.0, 0.0, 1.0));
+		print(text, 50, 0, "PLAYER 1 IS THE WINNER !!!"); 
+	}else {
+		default_color(text, Color(0.0, 0.0, 1.0, 1.0));
+		print(text, 50, 0, "PLAYER 2 IS THE WINNER !!!"); 
+	}
 	::draw(text, window_width(), window_height()/2);
 }
 

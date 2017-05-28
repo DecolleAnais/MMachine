@@ -110,6 +110,9 @@ class Player {
     float turning_angle_ ;
     float max_speed_ ;
     vec2 friction_ ;
+
+    // others
+    bool fallen_;
 } ;
 
 #endif

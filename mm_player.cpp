@@ -187,11 +187,18 @@ public:
 
     void updateScores(){
         score_.updateCheckpoints(joueur1_.getPosition(), joueur2_.getPosition());
-        if(distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
+        /*bool falling_player_1 = isFallen(joueur1_);
+        bool falling_player_2 = isFallen(joueur2_);
+        if(falling_player_1) {
+            score_.updateScore(1);  // si le joueur 1 est tombé, le joueur 2 gagne la manche
+        }else if(falling_player_2) {
+            score_.updateScore(0);  // si le joueur 2 est tombé, le joueur 1 gagne la manche
+        // s'il y a un trop grand écart dans le nombre de checkpoints validés (triche) ou si les joueurs sont trop espacés, désignation d'un gagnant    
+        }else*/ if(score_.getEcartCheckpoints() > 4 || distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
             int first = score_.getFirst(joueur1_.getPosition(), joueur2_.getPosition());
             score_.updateScore(first);
             winner_time_ = Clock::now();
-        }
+        }        
     }
 
     void updateScene(){
@@ -244,13 +251,21 @@ public:
 
         Clock::time_point time = Clock::now();
         float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
-        if(score_.getRoundWinner() != -1) {
-            score_.drawCongratulations();
-            if (winner_delay > 5.0)
-            {
-                reset();
+        if(score_.end()) {
+            score_.drawWinner();
+            if (winner_delay > 5.0) {
+                    return 0;
+            }
+        }else {
+            if(score_.getRoundWinner() != -1) {
+                score_.drawRoundWinner();
+                if (winner_delay > 5.0) {
+                    reset();
+                }
             }
         }
+
+        
 
         /* Contrôles clavier */
         //reset
