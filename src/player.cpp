@@ -17,7 +17,8 @@ Player::Player() :
     acceleration_(0.0005f),
     turning_angle_(3.f),
     max_speed_(8.f),
-    friction_(0.02f, 0.1f) //front and lateral friction for drift
+    friction_(0.02f, 0.1f), //front and lateral friction for drift
+    fallen_(false)
 {}
 
 void Player::spawn_at(const Point& position, const Vector& direction) {

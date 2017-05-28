@@ -1,7 +1,9 @@
 #include "src/terrain.hpp"
 #include "src/controller.hpp"
 #include "src/player.hpp"
-#include "src/scoreDisplay.hpp"
+#include "src/scoreManager.hpp"
+#include "src/bezierPath.hpp"
+#include "src/parser.hpp"
 
 #include "mat.h"
 #include "wavefront.h"
@@ -27,9 +29,7 @@ public:
       controller1_(SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT),
       controller2_('z', 's', 'q', 'd'),
       terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f)),
-      max_score_(4),
-      score_player1_(2),
-      score_(max_score_)
+      score_(4 , 2, terrain_.getCheckpoints())
     {}
     
     int init( )
@@ -61,7 +61,7 @@ public:
                     std::max(joueur1_.get_y(), joueur2_.get_y()),
                     std::max(joueur1_.get_z(), joueur2_.get_z()));
 
-        // Init des boites englobantes
+        /************* INIT BOITES ENGLOBANTES *************/
         Point p1, p2;
         vehicule1_.bounds(p1, p2);
         joueur1_.set_bounding_box(p1, p2);
@@ -216,47 +216,20 @@ public:
     }
 
 
-    int updateScores(){
-        int score_updated = 0;
-
-        if(distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
-            return 0;
-        }
-        return -1;
-
-        /************* DETECTION RETARD D'UN JOUEUR *************/
-        // détection d'un trop grand champ de caméra, recentre la caméra sur le joueur 1
-        // float coeffSpeed = 7.5;
-        // float maxDistPlayers = 27.0f;
-        // Point pminT, pmaxT;
-        // if(length(pmax - pmin) >= maxDistPlayers) {
-        //     // calcul des points selon qui est premier
-        //     //if(first() == 1) {
-        //     if(score_player1_ > 0 && score_player1_ < max_score_) {
-        //         if(1 == 1) {
-        //             score_player1_++;
-        //             score_updated = 1;
-        //             if(score_player1_ == max_score_) {
-        //                 // fin du jeu, joueur 1 gagnant
-        //                 score_updated = -1;
-        //             }
-        //         } else {
-        //             score_player1_--;
-        //             score_updated = 2;
-        //             if(score_player1_ == 0) {
-        //                 // fin du jeu, joueur 2 gagnant
-        //                 score_updated = -2;
-        //             }
-        //         }
-        //     }
-
-        //     pminT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
-        //     pmaxT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
-        // }
-        // else{
-        //     pminT = pmin;
-        //     pmaxT = pmax;
-        // }
+    void updateScores(){
+        score_.updateCheckpoints(joueur1_.getPosition(), joueur2_.getPosition());
+        /*bool falling_player_1 = isFallen(joueur1_);
+        bool falling_player_2 = isFallen(joueur2_);
+        if(falling_player_1) {
+            score_.updateScore(1);  // si le joueur 1 est tombé, le joueur 2 gagne la manche
+        }else if(falling_player_2) {
+            score_.updateScore(0);  // si le joueur 2 est tombé, le joueur 1 gagne la manche
+        // s'il y a un trop grand écart dans le nombre de checkpoints validés (triche) ou si les joueurs sont trop espacés, désignation d'un gagnant    
+        }else*/ if(score_.getEcartCheckpoints() > 4 || distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
+            int first = score_.getFirst(joueur1_.getPosition(), joueur2_.getPosition());
+            score_.updateScore(first);
+            winner_time_ = Clock::now();
+        }        
     }
 
     void updateScene(){
@@ -304,10 +277,12 @@ public:
     {
         /* Mise à jour de la scene et du score */
         updateScene();
-        int result = updateScores();
+        if(score_.getRoundWinner() == -1) {
+            updateScores();
+        }
 
         /* Déplace la caméra & récupère la projection */
-        Transform view = updateCamera(result);
+        Transform view = updateCamera(score_.getRoundWinner());
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
 
         /* Calcul de la shadowmap */
@@ -355,7 +330,27 @@ public:
 
         // Rendu de la scene et de l'interface
         renderScene(view, projection);
-        score_.draw(score_player1_);
+        score_.draw();
+
+        /* s'il y a un gagnant, affichage spécifique pendant 5 s */
+
+        Clock::time_point time = Clock::now();
+        float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
+        if(score_.end()) {
+            score_.drawWinner();
+            if (winner_delay > 5.0) {
+                    return 0;
+            }
+        }else {
+            if(score_.getRoundWinner() != -1) {
+                score_.drawRoundWinner();
+                if (winner_delay > 5.0) {
+                    reset();
+                }
+            }
+        }
+
+        
 
         /* Contrôles clavier */
         //reset
@@ -374,6 +369,25 @@ public:
         }
 
         return 1;
+    }
+
+    void reset() {
+        // reset joueurs
+        joueur1_.spawn_at(Point(89.0,27.0,0), Vector(1,0,0)) ;
+        joueur1_.activate() ;
+        joueur2_.spawn_at(Point(89.0,25.0,0), Vector(1,0,0)) ;
+        joueur2_.activate() ;
+
+        // reset caméra
+        oldPmin_ = Point(std::min(joueur1_.get_x(), joueur2_.get_x()),
+                    std::min(joueur1_.get_y(), joueur2_.get_y()),
+                    std::max(joueur1_.get_z(), joueur2_.get_z()));
+        oldPmax_ = Point(std::max(joueur1_.get_x(), joueur2_.get_x()),
+                    std::max(joueur1_.get_y(), joueur2_.get_y()),
+                    std::max(joueur1_.get_z(), joueur2_.get_z()));
+
+        // reset score de la manche
+        score_.resetRound();
     }
 
 protected:
@@ -404,6 +418,9 @@ protected:
     ScoreDisplay score_;
 
     Clock::time_point start_;
+
+    ScoreManager score_;
+    std::chrono::high_resolution_clock::time_point winner_time_;
 };
 
 
