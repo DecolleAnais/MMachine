@@ -2,7 +2,6 @@
 #include "src/controller.hpp"
 #include "src/player.hpp"
 #include "src/scoreManager.hpp"
-#include "src/bezierPath.hpp"
 #include "src/parser.hpp"
 
 #include "mat.h"
@@ -298,10 +297,9 @@ public:
             float delta = 2 * (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - start_).count() / 1000.0;
             while(delta > 360.0)
                 delta -= 360.0;
-            std::cout << delta << std::endl;
 
             // Définition des transformations de la lumière
-            Transform lightView = getLightSource(); //* RotationY(delta);
+            Transform lightView = getLightSource() * RotationY(delta);
             Transform lightProjection = ortho(200.0, -200.0, 200.0, -200.0, 400.0, 0.0);
             //Transform lightProjection = projection;
 
@@ -333,8 +331,7 @@ public:
         score_.draw();
 
         /* s'il y a un gagnant, affichage spécifique pendant 5 s */
-
-        Clock::time_point time = Clock::now();
+        time = Clock::now();
         float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
         if(score_.end()) {
             score_.drawWinner();
@@ -415,7 +412,6 @@ protected:
 
     unsigned int max_score_;
     unsigned int score_player1_;
-    ScoreDisplay score_;
 
     Clock::time_point start_;
 
