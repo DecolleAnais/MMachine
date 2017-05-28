@@ -20,7 +20,7 @@ Player::Player() :
     friction_(0.02f, 0.1f) //front and lateral friction for drift
 {}
 
-void Player::spawn_at(const Point& position, const Vector& direction, const Point& bound_p1, const Point& bound_p2) {
+void Player::spawn_at(const Point& position, const Vector& direction) {
   //reset position on terrain
   position_ = position ;
   direction_ = direction ;
@@ -137,7 +137,6 @@ void Player::deactivate() {
 }
 
 Transform Player::transform() {
-  step() ;
   return Transform(direction_, cross(normal_, direction_), normal_, position_ - Point()) ;
 }
 

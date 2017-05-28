@@ -16,7 +16,7 @@ class Player {
      * @param position la position ou placer le vehicule
      * @param direction la direction vers laquelle se dirige le vehicule
      */
-    void spawn_at(const Point& position, const Vector& direction, const Point& bound_p1, const Point& bound_p2) ;
+    void spawn_at(const Point& position, const Vector& direction) ;
 
     /**
      * Statut du vehicule
@@ -77,6 +77,7 @@ class Player {
      */
     void setOtherPlayer(Player& player);  
     std::vector<Point> getCornerPoints();  
+    void step() ;
     
   private :
 
@@ -94,7 +95,6 @@ class Player {
     bool active_ ;
     Vector speed_ ;
     int last_time_ ;
-    void step() ;
     bool collide(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm);
     bool collideWithTerrain(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm);
     bool collideWithPlayer(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm);
