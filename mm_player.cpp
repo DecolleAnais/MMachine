@@ -96,6 +96,8 @@ public:
         /************* INIT SHADER *************/
         m_program = read_program("MMachine/vertex_fragment_shaders.glsl");
         program_print_errors(m_program);
+        shadow_program = read_program("MMachine/shadow_shaders.glsl");
+        program_print_errors(shadow_program);
 
         /************* INIT CONFIG OPENGL *************/
         glClearColor(0.2f, 0.2f, 0.2f, 1.f);        // couleur par defaut de la fenetre
@@ -103,7 +105,36 @@ public:
         glClearDepth(1.f);                          // profondeur par defaut
         glDepthFunc(GL_LESS);                       // ztest, conserver l'intersection la plus proche de la camera
         glEnable(GL_DEPTH_TEST);                    // activer le ztest
+        glEnable(GL_CULL_FACE);
         
+        /* Init shadowmap */
+        shadowWidth_ = 1024 * 4;
+        shadowHeight_ = 1024 * 4;
+        // Init buffer & configuration
+        glGenFramebuffers(1, &shadowBuffer_);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer_);
+            // Init texture & configuration
+            glGenTextures(1, &shadowMap_);
+            glBindTexture(GL_TEXTURE_2D, shadowMap_);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, shadowWidth_, 
+                        shadowHeight_, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+            // GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+            // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMap_, 0);
+
+            glDrawBuffer(GL_NONE);
+
+            if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+                std::cerr << "Error in initialising shadowmap." << std::endl;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        start_ = Clock::now();
+
         return 0;   // ras, pas d'erreur
     }
     
@@ -148,7 +179,7 @@ public:
             pmaxT = joueur2_.getPosition();
         }
         else
-            throw std::invalid_argument("Parameter score is ranged in [-1; numLastPlayer - 1].");
+            throw std::invalid_argument("Parameter score is mean to be ranged in [-1; numLastPlayer - 1].");
 
         /* Calcul du déplacement de la caméra */
         Clock::time_point time = Clock::now();
@@ -228,11 +259,22 @@ public:
         terrain_.draw(m_program, Identity(), view, projection);
     }
 
+    Transform getLightSource(){
+        Point source(100.0, 100.f, 100.f);
+        Point target(100.f, 100.f, 0.f);
+        Vector up = cross(Vector(source), Vector(1.f, 0.f, 0.f));
+        return Lookat(source, target, up);
+    }
+
+    Transform ortho(float right, float left, float top, float bottom, float far, float near){
+        return Transform(2.0/(right - left), 0.0, 0.0, -(right + left)/(right - left),
+                                    0.0, 2.0/(top - bottom), 0.0, -(top + bottom)/(top - bottom),
+                                    0.0, 0.0, -2.0/(far - near), -(far + near)/(far - near)); 
+    }
+
     /************* DESSIN *************/
     int render( )
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         /* Mise à jour de la scene et du score */
         updateScene();
         if(score_.getRoundWinner() == -1) {
@@ -243,7 +285,50 @@ public:
         Transform view = updateCamera(score_.getRoundWinner());
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
 
+        /* Calcul de la shadowmap */
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer_);
+            glViewport(0, 0, shadowWidth_, shadowHeight_);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            glCullFace(GL_FRONT);
+
+            // Set du shader de génération de shadowmap
+            glUseProgram(shadow_program);
+
+            Clock::time_point time = Clock::now();
+            float delta = 2 * (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - start_).count() / 1000.0;
+            while(delta > 360.0)
+                delta -= 360.0;
+            std::cout << delta << std::endl;
+
+            // Définition des transformations de la lumière
+            Transform lightView = getLightSource(); //* RotationY(delta);
+            Transform lightProjection = ortho(200.0, -200.0, 200.0, -200.0, 400.0, 0.0);
+            //Transform lightProjection = projection;
+
+            // Rendu de la scene
+            terrain_.draw(shadow_program, Identity(), lightView, lightProjection);
+            program_uniform(shadow_program, "mvpMatrix",
+                            lightProjection * lightView * joueur1_.transform());
+            vehicule1_.draw(shadow_program);
+            program_uniform(shadow_program, "mvpMatrix", 
+                            lightProjection * lightView * joueur2_.transform());  
+            vehicule2_.draw(shadow_program);
+        // Remise au valeurs par défaut de l'affichage
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, window_width(), window_height());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glCullFace(GL_BACK);
+
         /* Affichage de la scene et de l'interface */ 
+        // Set du shader principal
+        glUseProgram(m_program);
+
+        // Passage de la shadowmap et de la transformation de la lumière
+        program_use_texture(m_program, "shadowMap", 3, shadowMap_);
+        program_uniform(m_program, "lightPos", lightView);
+        program_uniform(m_program, "lightProj", lightProjection);
+
+        // Rendu de la scene et de l'interface
         renderScene(view, projection);
         score_.draw();
 
@@ -305,7 +390,6 @@ public:
         score_.resetRound();
     }
 
-
 protected:
     Mesh vehicule1_;
     Mesh vehicule2_;
@@ -322,10 +406,18 @@ protected:
     Point oldPmax_;
     std::chrono::high_resolution_clock::time_point oldTime_;
 
-    float camera_x_max;
-    float camera_y_max;
-
     GLuint m_program;
+
+    GLuint shadowBuffer_;
+    GLuint shadowMap_;
+    GLuint shadow_program;
+    int shadowWidth_, shadowHeight_;
+
+    unsigned int max_score_;
+    unsigned int score_player1_;
+    ScoreDisplay score_;
+
+    Clock::time_point start_;
 
     ScoreManager score_;
     std::chrono::high_resolution_clock::time_point winner_time_;
