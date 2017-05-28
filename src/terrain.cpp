@@ -383,13 +383,11 @@ void GeneratedTerrain::setCheckpoints(Transform transform) {
       check.center.x = check.center.x / (w - 1);
       check.center.y = 1-(check.center.y / (h - 1));  // 1 - la valeur en y car les coordonnées données viennent d'un png, et les y sont inversés
       check.center = transform(check.center);
-      check.center.z = 20;
 
       // normalisation et transformation du point sur le rayon
       check.radius_point.x = check.radius_point.x / (w - 1);
       check.radius_point.y = 1-(check.radius_point.y / (h - 1));  // 1 - la valeur en y car les coordonnées données viennent d'un png, et les y sont inversés
       check.radius_point = transform(check.radius_point);
-      check.radius_point.z = 20;
 
       // init du rayon
       check.radius = distance(check.center, check.radius_point);

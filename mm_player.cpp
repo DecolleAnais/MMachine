@@ -1,7 +1,7 @@
 #include "src/terrain.hpp"
 #include "src/controller.hpp"
 #include "src/player.hpp"
-#include "src/scoreDisplay.hpp"
+#include "src/scoreManager.hpp"
 #include "src/bezierPath.hpp"
 #include "src/parser.hpp"
 
@@ -29,10 +29,7 @@ public:
       controller1_(SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT),
       controller2_('z', 's', 'q', 'd'),
       terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f)),
-      max_score_(4),
-      score_player1_(2),
-      score_(max_score_),
-      bezierPath_()
+      score_(4 , 2, terrain_.getCheckpoints())
     {}
     
     int init( )
@@ -70,13 +67,6 @@ public:
         joueur1_.set_bounding_box(p1, p2);
         vehicule2_.bounds(p1, p2);
         joueur2_.set_bounding_box(p1, p2);
-
-        /************* INIT CHEMIN DE BEZIER *************/
-        Vector a(-0.3, -0.7 , -1);
-        Vector b(-0.9, 0.3, -1);
-        Vector c(-0.7, 0.9, -1);
-        Vector d(0.5, 0.1, -1);
-        bezierPath_.makePath(a, b, c, d);
 
         /************* INIT TEXTURES *************/
         textures.resize(2);
@@ -131,7 +121,6 @@ public:
         glDeleteTextures(1, &textures[0]);
         terrain_.release();
         score_.release();
-        bezierPath_.release();
         return 0;
     }
     
@@ -196,47 +185,13 @@ public:
     }
 
 
-    int updateScores(){
-        int score_updated = 0;
-
+    void updateScores(){
+        score_.updateCheckpoints(joueur1_.getPosition(), joueur2_.getPosition());
         if(distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
-            return 0;
+            int first = score_.getFirst(joueur1_.getPosition(), joueur2_.getPosition());
+            score_.updateScore(first);
+            winner_time_ = Clock::now();
         }
-        return -1;
-
-        /************* DETECTION RETARD D'UN JOUEUR *************/
-        // détection d'un trop grand champ de caméra, recentre la caméra sur le joueur 1
-        // float coeffSpeed = 7.5;
-        // float maxDistPlayers = 27.0f;
-        // Point pminT, pmaxT;
-        // if(length(pmax - pmin) >= maxDistPlayers) {
-        //     // calcul des points selon qui est premier
-        //     //if(first() == 1) {
-        //     if(score_player1_ > 0 && score_player1_ < max_score_) {
-        //         if(1 == 1) {
-        //             score_player1_++;
-        //             score_updated = 1;
-        //             if(score_player1_ == max_score_) {
-        //                 // fin du jeu, joueur 1 gagnant
-        //                 score_updated = -1;
-        //             }
-        //         } else {
-        //             score_player1_--;
-        //             score_updated = 2;
-        //             if(score_player1_ == 0) {
-        //                 // fin du jeu, joueur 2 gagnant
-        //                 score_updated = -2;
-        //             }
-        //         }
-        //     }
-
-        //     pminT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
-        //     pmaxT = Point(joueur1_.get_x(), joueur1_.get_y(), joueur1_.get_z());
-        // }
-        // else{
-        //     pminT = pmin;
-        //     pmaxT = pmax;
-        // }
     }
 
     void updateScene(){
@@ -273,15 +228,29 @@ public:
 
         /* Mise à jour de la scene et du score */
         updateScene();
-        int result = updateScores();
+        if(score_.getRoundWinner() == -1) {
+            updateScores();
+        }
 
         /* Déplace la caméra & récupère la projection */
-        Transform view = updateCamera(result);
+        Transform view = updateCamera(score_.getRoundWinner());
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
 
         /* Affichage de la scene et de l'interface */ 
         renderScene(view, projection);
-        score_.draw(score_player1_);
+        score_.draw();
+
+        /* s'il y a un gagnant, affichage spécifique pendant 5 s */
+
+        Clock::time_point time = Clock::now();
+        float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
+        if(score_.getRoundWinner() != -1) {
+            score_.drawCongratulations();
+            if (winner_delay > 5.0)
+            {
+                reset();
+            }
+        }
 
         /* Contrôles clavier */
         //reset
@@ -300,6 +269,25 @@ public:
         }
 
         return 1;
+    }
+
+    void reset() {
+        // reset joueurs
+        joueur1_.spawn_at(Point(89.0,27.0,0), Vector(1,0,0)) ;
+        joueur1_.activate() ;
+        joueur2_.spawn_at(Point(89.0,25.0,0), Vector(1,0,0)) ;
+        joueur2_.activate() ;
+
+        // reset caméra
+        oldPmin_ = Point(std::min(joueur1_.get_x(), joueur2_.get_x()),
+                    std::min(joueur1_.get_y(), joueur2_.get_y()),
+                    std::max(joueur1_.get_z(), joueur2_.get_z()));
+        oldPmax_ = Point(std::max(joueur1_.get_x(), joueur2_.get_x()),
+                    std::max(joueur1_.get_y(), joueur2_.get_y()),
+                    std::max(joueur1_.get_z(), joueur2_.get_z()));
+
+        // reset score de la manche
+        score_.resetRound();
     }
 
 
@@ -324,11 +312,8 @@ protected:
 
     GLuint m_program;
 
-    unsigned int max_score_;
-    unsigned int score_player1_;
-    ScoreDisplay score_;
-
-    BezierPath bezierPath_;
+    ScoreManager score_;
+    std::chrono::high_resolution_clock::time_point winner_time_;
 };
 
 
