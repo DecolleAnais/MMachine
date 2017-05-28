@@ -140,8 +140,8 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
     for(unsigned int j = 0;j < height - 1;j++) {
       // create 2 triangles for each quad
       mesh_.triangle((i + 1) * height + j,
-                      i * height + j,
-                      (i + 1) * height + (j + 1));
+                      (i + 1) * height + (j + 1),
+                      i * height + j);
       mesh_.triangle(i * height + j,
                     (i + 1) * height + (j + 1),
                     i * height + (j + 1));
