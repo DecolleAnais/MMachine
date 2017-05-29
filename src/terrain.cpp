@@ -22,7 +22,7 @@ std::string getCurrentPath(){
 }
 
 // Generated Terrain
-GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_(GL_TRIANGLES){
+GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_(GL_TRIANGLES), underBox_(GL_TRIANGLES){
   PngUtilities png;
   std::string pathToMap = getCurrentPath() + "/../textures/circuit.png";
   png.init(pathToMap.c_str());
@@ -50,7 +50,10 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
       // vertex altitude between 0 and 1
       float fVertexHeight = png.getValue(i*step, (height - j - 1)*step) / 255.0f;
       // add the coordinates of each vertex
-      vVertexData[i][j] = transform(Vector(/*-0.5 +*/ fScaleH, /*-0.5 +*/ fScaleW, fVertexHeight));
+      if(i == 0 || j == 0 || i == width-1 || j == height-1)
+        vVertexData[i][j] = transform(Vector(/*-0.5 +*/ fScaleH, /*-0.5 +*/ fScaleW, 0.0));
+      else
+        vVertexData[i][j] = transform(Vector(/*-0.5 +*/ fScaleH, /*-0.5 +*/ fScaleW, fVertexHeight));
       vCoordsData[i][j] = vec2(/*fTextureU **/ fScaleH , /*fTextureV **/ fScaleW);
       //std::cout << vCoordsData[i][j].x << ";" << vCoordsData[i][j].y << std::endl;
     }
@@ -126,19 +129,25 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
   // create the mesh
   for(unsigned int i = 0;i < width;i++) {
     for(unsigned int j = 0;j < height;j++) {
+      /* Terrain */
       // add the normal for each vertex
       mesh_.normal(vFinalNormals[i][j]);
       // add the texture
       mesh_.texcoord(vCoordsData[i][j]);
       // add the vertex
       mesh_.vertex((Point)vVertexData[i][j]);
+
+      /* UnderBox */
+      underBox_.normal(Vector(0.0, 0.0, -1.0));
+      underBox_.texcoord(vCoordsData[i][j]);
+      underBox_.vertex(Point(vVertexData[i][j].x, vVertexData[i][j].y, 0.0));
     }
   }
-
 
   // build the triangles
   for(unsigned int i = 0;i < width - 1;i++) {
     for(unsigned int j = 0;j < height - 1;j++) {
+      /* Terrain */
       // create 2 triangles for each quad
       mesh_.triangle((i + 1) * height + j,
                       (i + 1) * height + (j + 1),
@@ -146,6 +155,14 @@ GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_
       mesh_.triangle(i * height + j,
                     (i + 1) * height + (j + 1),
                     i * height + (j + 1));
+
+      /* UnderBox */
+      underBox_.triangle(i * height + j,
+                      (i + 1) * height + (j + 1),
+                      (i + 1) * height + j);
+      underBox_.triangle(i * height + (j + 1),
+                    (i + 1) * height + (j + 1),
+                    i * height + j);
     }
   }
 
@@ -162,8 +179,8 @@ void GeneratedTerrain::smooth(std::vector< std::vector< Vector > >& vVertexData,
     unsigned int id = 0;
     std::vector< std::vector< float > > neighbours;
     neighbours.resize(2);
-    for(unsigned int i = 0;i < height;i++) {
-      for(unsigned int j = 0;j < width;j++) {
+    for(unsigned int i = 1;i < height-1;i++) {
+      for(unsigned int j = 1;j < width-1;j++) {
         // voisins directs dans neighbours[0], voisins en diagonales dans neighbours[1]
         if(i > 0) {
           neighbours[0].push_back(vVertexData[i-1][j].z); // up
@@ -348,7 +365,7 @@ void GeneratedTerrain::draw(const Transform& v, const Transform& p) {
 
 void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) {
   // configurer le pipeline 
-  //glUseProgram(shaders_program);
+  glUseProgram(shaders_program);
 
   // configurer le shader program
   // . composer les transformations : model, view et projection
@@ -369,6 +386,31 @@ void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Tran
   // program_use_texture(shaders_program, "texture2", 0, textures[2]);
 
   mesh_.draw(shaders_program);
+}
+
+void GeneratedTerrain::drawUnderBox(const GLuint& shaders_program, Transform model, Transform view, Transform proj) {
+  // configurer le pipeline 
+  glUseProgram(shaders_program);
+
+  // configurer le shader program
+  // . composer les transformations : model, view et projection
+  Transform mv = view * model;
+  Transform mvp = proj * view * model;
+
+  // . parametrer le shader program :
+  //   . transformation : la matrice declaree dans le vertex shader s'appelle mvpMatrix
+  program_uniform(shaders_program, "mvMatrix", mv);        
+  program_uniform(shaders_program, "normalMatrix", mv.normal());        
+  program_uniform(shaders_program, "mvpMatrix", mvp);
+  program_uniform(shaders_program, "modelMatrix", model);
+  program_uniform(shaders_program, "viewMatrix", view);
+  program_uniform(shaders_program, "viewInvMatrix", view.inverse());
+
+  // program_use_texture(shaders_program, "texture0", 0, textures[0]);
+  // program_use_texture(shaders_program, "texture1", 0, textures[1]);
+  // program_use_texture(shaders_program, "texture2", 0, textures[2]);
+
+  underBox_.draw(shaders_program);
 }
 
 void GeneratedTerrain::setCheckpoints(Transform transform) {

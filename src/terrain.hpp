@@ -60,6 +60,7 @@ class GeneratedTerrain : public Terrain {
         void project(const Point& from, Point& to, Vector& n, Player* player) const ;
         void draw(const Transform& v, const Transform& p) ;
         void draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
+        void drawUnderBox(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
         void setCheckpoints(Transform transform) ;
         void drawCheckpoints(Transform model, Transform view, Transform proj);
         std::vector<Checkpoint> getCheckpoints() const;
@@ -68,6 +69,7 @@ class GeneratedTerrain : public Terrain {
 
     private :
         Mesh mesh_ ;
+        Mesh underBox_;
         unsigned int height;
         unsigned int width;
         bool collideWithTriangleGird(Point pos, int ia, int ib, int ic);
