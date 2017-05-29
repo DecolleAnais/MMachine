@@ -19,10 +19,17 @@
 
 typedef std::chrono::high_resolution_clock Clock;
 
+/**
+ * \class Play
+ * \brief Classe principale du jeu
+ */
 class Play : public App
 {
 public:
-    // constructeur : donner les dimensions de l'image, et eventuellement la version d'openGL.
+    /**
+     * \brief Constructeur
+     * Initialise la base de la fenêtre, des controlleurs de joueurs, du terrain et des scores.
+     */
     Play( ) : 
       App(1024, 640), 
       controller1_(SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT),
@@ -30,7 +37,13 @@ public:
       terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f)),
       score_(4 , 2, terrain_.getCheckpoints())
     {}
-    
+
+    /**
+     * \brief Initialise le jeu
+     * Crée le joueurs et leur véhicules, les configure et les spawn.
+     * Crée les textures utiles plus tard, et charge les shaders utilisés.
+     * Initialise la texture shadow map et son framebuffer.
+     */
     int init( )
     {
         /************* INIT MESH VEHICULES *************/
@@ -105,7 +118,7 @@ public:
         glDepthFunc(GL_LESS);                       // ztest, conserver l'intersection la plus proche de la camera
         glEnable(GL_DEPTH_TEST);                    // activer le ztest
         
-        /* Init shadowmap */
+        /************* INIT SHADOWMAP *************/
         shadowWidth_ = 1024 * 4;
         shadowHeight_ = 1024 * 4;
         // Init buffer & configuration
@@ -120,8 +133,6 @@ public:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-            // GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-            // glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
             glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMap_, 0);
 
@@ -131,12 +142,15 @@ public:
                 std::cerr << "Error in initialising shadowmap." << std::endl;
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        /************* INIT ELEMENTS UTILES *************/
         start_ = Clock::now();
 
         return 0;   // ras, pas d'erreur
     }
     
-
+    /**
+     * \brief Libère la mémoire des éléments du jeu
+     */
     int quit( )
     {
         release_program(m_program);
@@ -153,7 +167,13 @@ public:
         return 0;
     }
     
-    
+    /**
+     * \brief Met à jour la position de la caméra.
+     * La caméra est définie par la boite englobante des joueurs à afficher, avec un espace entre la fin de la boite englobante et la fin de l'espace d'affichage. 
+     * On permet ainsi au joueurs de pouvoir voir où ils se dirigent. 
+     * \return la transformation représentant la position et la rotation de la caméra dans le monde.
+     * \param score : -1 si on veut voir les deux joueurs, 0 pour cibler que le joueur 1, 1 pour le joueur 2.
+     */
     Transform updateCamera(int score){
         /* Sélection des points décrivant la boite englobantes des joueurs à afficher */
         Point pminT, pmaxT;
@@ -217,7 +237,11 @@ public:
         return Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
     }
 
-
+    /**
+     * \brief Fait appel à la mise à jour des scores du jeu en fonction de la position des joueurs dans le monde.
+     * Si un joueur est tombé, l'autre est déclaré vainqueur de la manche. 
+     * Si la distance entre les joueurs est trop grande, le joueur le plus en avance gagne la manche.
+     */
     void updateScores(){
         score_.updateCheckpoints(joueur1_.getPosition(), joueur2_.getPosition());
         bool falling_player_1 = joueur1_.isFallen();
@@ -236,12 +260,20 @@ public:
         }        
     }
 
+    /**
+     * \brief Met à jour la position des éléments mobiles de la scène. 
+     */ 
     void updateScene(){
         /************* DEPLACEMENT JOUEURS *************/
         joueur1_.step();
         joueur2_.step();
     }
 
+    /**
+     * \brief Fait l'appel des affiches de chaque éléments de la scène.
+     * \param view : matrice de transformation représentant la position de la caméra dans le monde.
+     * \param projection : matrice de projection à utiliser pour l'affichage.
+     */
     void renderScene(const Transform& view, const Transform& projection){
         /************* DESSIN VEHICULES *************/
         draw(vehicule1_, joueur1_.transform(), view, projection) ;
@@ -264,6 +296,10 @@ public:
         terrain_.drawUnderBox(m_program, Identity(), view, projection);
     }
 
+    /**
+     * \brief Retourne la position de la source de lumière diffuse dans le repère monde.
+     * \return transformation view représentant la position et l'orientation de la lumière.
+     */
     Transform getLightSource(){
         Point source(100.0, 100.f, 100.f);
         Point target(100.f, 100.f, 0.f);
@@ -271,13 +307,20 @@ public:
         return Lookat(source, target, up);
     }
 
+    /**
+     * \brief Génère une projection orthograpique de largeur right - left, de hauteur top - bottom et de profondeur far - near
+     * \return transformation représentant une projection orthograpique 
+     */ 
     Transform ortho(float right, float left, float top, float bottom, float far, float near){
         return Transform(2.0/(right - left), 0.0, 0.0, -(right + left)/(right - left),
                                     0.0, 2.0/(top - bottom), 0.0, -(top + bottom)/(top - bottom),
                                     0.0, 0.0, -2.0/(far - near), -(far + near)/(far - near)); 
     }
 
-    /************* DESSIN *************/
+    /**
+     * \brief Boucle principale du jeu. Appelée à chaque frame.
+     * \return 1 pour continuer, 0 fin du jeu.
+     */
     int render( )
     {
         /* Mise à jour de la scene et du score */
@@ -349,23 +392,21 @@ public:
         score_.draw();
 
         /* s'il y a un gagnant, affichage spécifique pendant 5 s */
-        // time = Clock::now();
-        // float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
-        // if(score_.end()) {
-        //     score_.drawWinner();
-        //     if (winner_delay > 5.0) {
-        //             return 0;
-        //     }
-        // }else {
-        //     if(score_.getRoundWinner() != -1) {
-        //         score_.drawRoundWinner();
-        //         if (winner_delay > 5.0) {
-        //             reset();
-        //         }
-        //     }
-        // }
-
-        
+        time = Clock::now();
+        float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
+        if(score_.end()) { // fin du jeu?
+            score_.drawWinner();
+            if (winner_delay > 5.0) {
+                    return 0; // fin du jeu.
+            }
+        }else {
+            if(score_.getRoundWinner() != -1) {
+                score_.drawRoundWinner();
+                if (winner_delay > 5.0) {
+                    reset();
+                }
+            }
+        }
 
         /* Contrôles clavier */
         //reset
@@ -386,6 +427,10 @@ public:
         return 1;
     }
 
+    /**
+     * \brief Remet à zéro la manche.
+     * Replace les joueurs au départ, reset la caméra et le score de manche.
+     */ 
     void reset() {
         // reset joueurs
         joueur1_.spawn_at(Point(89.0,27.0,0), Vector(1,0,0)) ;
@@ -406,35 +451,41 @@ public:
     }
 
 protected:
-    Mesh vehicule1_;
+    // Joueurs 
+    Mesh vehicule1_; 
     Mesh vehicule2_;
     Player joueur1_;
     Player joueur2_;
     KeyboardController controller1_ ;
     KeyboardController controller2_ ;
 
+    // Terrain et ses textures
     GeneratedTerrain terrain_;
     std::vector<GLuint> textures;
     std::vector<GLuint> samplers;
 
+    // Caméra
     Point oldPmin_;
     Point oldPmax_;
     std::chrono::high_resolution_clock::time_point oldTime_;
 
+    // Shader
     GLuint m_program;
 
+    // ShadowMap (gestion des ombres)
     GLuint shadowBuffer_;
     GLuint shadowMap_;
     GLuint shadow_program;
     int shadowWidth_, shadowHeight_;
 
+    // Scores
     unsigned int max_score_;
     unsigned int score_player1_;
-
-    Clock::time_point start_;
-
     ScoreManager score_;
     std::chrono::high_resolution_clock::time_point winner_time_;
+
+    // Autres
+    Clock::time_point start_;
 };
 
 
