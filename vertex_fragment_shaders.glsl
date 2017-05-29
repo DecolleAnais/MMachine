@@ -146,7 +146,7 @@ float ShadowCalculation(vec4 fragPosLightSpace){
     bias = clamp(bias, 0,0.01);
 
     // Sample the shadow map 8 times
-    for (int i=0;i<16;i++){
+    for (int i=0;i<4;i++){
         // use either :
         //  - Always the same samples.
         //    Gives a fixed pattern in the shadow, but no noise
@@ -161,7 +161,7 @@ float ShadowCalculation(vec4 fragPosLightSpace){
         // being fully in the shadow will eat up 4*0.2 = 0.8
         // 0.2 potentially remain, which is quite dark.
         if ( texture( shadowMap, projCoords.xy + poissonDisk[i]/1200.0 ).r  <  projCoords.z-bias ){
-            visibility-= 0.06;
+            visibility-= 0.1;
         }
     }
 

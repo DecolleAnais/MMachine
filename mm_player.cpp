@@ -3,6 +3,7 @@
 #include "src/player.hpp"
 #include "src/scoreManager.hpp"
 #include "src/parser.hpp"
+#include "src/objectsManager.hpp"
 
 #include "mat.h"
 #include "wavefront.h"
@@ -28,15 +29,16 @@ public:
       controller1_(SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT),
       controller2_('z', 's', 'q', 'd'),
       terrain_(Point(-20.f, -20.f, 0.f), Point(20.f, 20.f, 0.f)),
+      objectsManager_(),
       score_(4 , 2, terrain_.getCheckpoints())
     {}
     
     int init( )
     {
         /************* INIT MESH VEHICULES *************/
-        vehicule1_ = read_mesh("MMachine/mmachine.obj") ;
+        vehicule1_ = read_mesh("MMachine/data/obj/mmachine.obj") ;
         vehicule1_.default_color(Color(1.0f, 0.f, 0.f)) ;
-        vehicule2_ = read_mesh("MMachine/mmachine.obj") ;
+        vehicule2_ = read_mesh("MMachine/data/obj/mmachine.obj") ;
         vehicule2_.default_color(Color(0.0f, 0.f, 1.f)) ;
 
         /************* INIT JOUEURS *************/
@@ -47,6 +49,9 @@ public:
         
         joueur1_.setOtherPlayer(joueur2_);
         joueur2_.setOtherPlayer(joueur1_);
+
+        joueur1_.setObjectsManager(&objectsManager_);
+        joueur2_.setObjectsManager(&objectsManager_);
 
         joueur1_.spawn_at(Point(89.0,27.0,0), Vector(1,0,0)) ;
         joueur1_.activate() ;
@@ -71,21 +76,21 @@ public:
         textures.resize(2);
         samplers.resize(2);
 
-        textures[0] = read_texture(0, "MMachine/textures/grass.png");
+        textures[0] = read_texture(0, "MMachine/data/textures/grass.png");
         glGenSamplers(1, &samplers[0]);
         glSamplerParameteri(samplers[0], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glSamplerParameteri(samplers[0], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glSamplerParameteri(samplers[0], GL_TEXTURE_WRAP_S, GL_REPEAT);
         glSamplerParameteri(samplers[0], GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-        textures[1] = read_texture(1, "MMachine/textures/route.png");
+        textures[1] = read_texture(1, "MMachine/data/textures/route.png");
         glGenSamplers(1, &samplers[1]);
         glSamplerParameteri(samplers[1], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glSamplerParameteri(samplers[1], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glSamplerParameteri(samplers[1], GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
         glSamplerParameteri(samplers[1], GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-        textures[2] = read_texture(2, "MMachine/textures/dirt.png");
+        textures[2] = read_texture(2, "MMachine/data/textures/dirt.png");
         glGenSamplers(1, &samplers[2]);
         glSamplerParameteri(samplers[2], GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glSamplerParameteri(samplers[2], GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -151,6 +156,7 @@ public:
         glDeleteTextures(1, &textures[0]);
         terrain_.release();
         score_.release();
+        objectsManager_.release();
         return 0;
     }
     
@@ -256,6 +262,9 @@ public:
 
         /************* DESSIN TERRAIN *************/
         terrain_.draw(m_program, Identity(), view, projection);
+
+        /************* DESSIN OBJETS *************/
+        objectsManager_.draw(m_program, view, projection);
     }
 
     Transform getLightSource(){
@@ -299,7 +308,7 @@ public:
                 delta -= 360.0;
 
             // Définition des transformations de la lumière
-            Transform lightView = getLightSource() * RotationY(delta);
+            Transform lightView = getLightSource();// * RotationY(delta);
             Transform lightProjection = ortho(200.0, -200.0, 200.0, -200.0, 400.0, 0.0);
             //Transform lightProjection = projection;
 
@@ -398,6 +407,8 @@ protected:
     GeneratedTerrain terrain_;
     std::vector<GLuint> textures;
     std::vector<GLuint> samplers;
+
+    ObjectsManager objectsManager_;
 
     Point oldPmin_;
     Point oldPmax_;

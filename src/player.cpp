@@ -191,9 +191,9 @@ bool Player::collide(const Point& oldPos, const Vector& oldNorm, Point& newPos, 
   bool collPlayer = collideWithPlayer(oldPos, oldNorm, newPos, newNorm);
 
   // collision avec les obstacles
-  // TODO
+  bool collObjects = objectsManager_->collideWithPlayer(oldPos, oldNorm, newPos, newNorm);
 
-  return collPlayer && collTerrain;
+  return collPlayer && collTerrain && collObjects;
 }
 
 bool Player::collideWithTerrain(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm){  
@@ -242,6 +242,10 @@ Point Player::getPosition(){
 
 void Player::setOtherPlayer(Player& player){
   playerToCollide_ = &player;
+}
+
+void Player::setObjectsManager(ObjectsManager* objectsManager) {
+  objectsManager_ = objectsManager;
 }
 
 std::vector<Point> Player::getCornerPoints(){

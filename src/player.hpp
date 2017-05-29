@@ -3,6 +3,7 @@
 
 #include "terrain.hpp"
 #include "controller.hpp"
+#include "objectsManager.hpp"
 
 #include "mat.h"
 #include "vec.h"
@@ -76,6 +77,10 @@ class Player {
      * Set l'autre joueur pour les collisions
      */
     void setOtherPlayer(Player& player);  
+    /**
+     * Set le conteneur d'objets pour les collisions
+     */
+    void setObjectsManager(ObjectsManager* objectsManager);
     std::vector<Point> getCornerPoints();  
     void step() ;
     
@@ -85,6 +90,7 @@ class Player {
     const Terrain* terrain_ ;
     void project(Point& candidate) ;
     Player* playerToCollide_;
+    ObjectsManager* objectsManager_;
 
     //control
     bool forward_ ;

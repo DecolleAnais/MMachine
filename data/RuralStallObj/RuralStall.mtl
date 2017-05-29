@@ -1,0 +1,34 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 27.07.2011 18:08:01
+
+newmtl RuralStallExc
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka RuralStallBaseExc_Diffuce.jpg
+	map_Kd RuralStallBaseExc_Diffuce.jpg
+	map_Ks RuralStallBaseExc_Spec.jpg
+	map_bump -bm 0.3000 RuralStallExcNrm_Normal_Bump.tga
+
+newmtl RuralStallRoof
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka RuralStallRoof_Diffuce.jpg
+	map_Kd RuralStallRoof_Diffuce.jpg
+	map_Ks RuralStallRoof_Spec.jpg
+	map_bump -bm 0.3000 RuralStallRoofNrm_Normal_Bump.tga

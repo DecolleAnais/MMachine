@@ -108,32 +108,34 @@ ifeq ($(config),release32)
 endif
 
 OBJECTS := \
-	$(OBJDIR)/draw.o \
-	$(OBJDIR)/program.o \
-	$(OBJDIR)/window.o \
-	$(OBJDIR)/vec.o \
-	$(OBJDIR)/image_io.o \
-	$(OBJDIR)/wavefront.o \
-	$(OBJDIR)/rgbe.o \
-	$(OBJDIR)/widgets.o \
-	$(OBJDIR)/uniforms.o \
-	$(OBJDIR)/mesh.o \
-	$(OBJDIR)/app.o \
-	$(OBJDIR)/mat.o \
-	$(OBJDIR)/text.o \
-	$(OBJDIR)/gamepads.o \
-	$(OBJDIR)/image.o \
-	$(OBJDIR)/orbiter.o \
 	$(OBJDIR)/app_time.o \
-	$(OBJDIR)/image_hdr.o \
 	$(OBJDIR)/texture.o \
+	$(OBJDIR)/widgets.o \
+	$(OBJDIR)/window.o \
+	$(OBJDIR)/program.o \
 	$(OBJDIR)/color.o \
-	$(OBJDIR)/player.o \
-	$(OBJDIR)/scoreManager.o \
-	$(OBJDIR)/parser.o \
-	$(OBJDIR)/pngUtilities.o \
-	$(OBJDIR)/controller.o \
+	$(OBJDIR)/uniforms.o \
+	$(OBJDIR)/draw.o \
+	$(OBJDIR)/mesh.o \
+	$(OBJDIR)/text.o \
+	$(OBJDIR)/rgbe.o \
+	$(OBJDIR)/image_io.o \
+	$(OBJDIR)/mat.o \
+	$(OBJDIR)/app.o \
+	$(OBJDIR)/image.o \
+	$(OBJDIR)/gamepads.o \
+	$(OBJDIR)/wavefront.o \
+	$(OBJDIR)/image_hdr.o \
+	$(OBJDIR)/vec.o \
+	$(OBJDIR)/orbiter.o \
 	$(OBJDIR)/terrain.o \
+	$(OBJDIR)/player.o \
+	$(OBJDIR)/bezierPath.o \
+	$(OBJDIR)/scoreManager.o \
+	$(OBJDIR)/controller.o \
+	$(OBJDIR)/pngUtilities.o \
+	$(OBJDIR)/parser.o \
+	$(OBJDIR)/objectsManager.o \
 	$(OBJDIR)/mm_player.o \
 
 RESOURCES := \
@@ -195,82 +197,88 @@ $(GCH): $(PCH)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 endif
 
-$(OBJDIR)/draw.o: ../src/gKit/draw.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/program.o: ../src/gKit/program.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/window.o: ../src/gKit/window.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/vec.o: ../src/gKit/vec.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/image_io.o: ../src/gKit/image_io.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/wavefront.o: ../src/gKit/wavefront.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/rgbe.o: ../src/gKit/rgbe.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/widgets.o: ../src/gKit/widgets.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/uniforms.o: ../src/gKit/uniforms.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/mesh.o: ../src/gKit/mesh.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/app.o: ../src/gKit/app.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/mat.o: ../src/gKit/mat.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/text.o: ../src/gKit/text.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/gamepads.o: ../src/gKit/gamepads.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/image.o: ../src/gKit/image.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/orbiter.o: ../src/gKit/orbiter.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/app_time.o: ../src/gKit/app_time.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/image_hdr.o: ../src/gKit/image_hdr.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/texture.o: ../src/gKit/texture.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/widgets.o: ../src/gKit/widgets.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/window.o: ../src/gKit/window.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/program.o: ../src/gKit/program.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/color.o: ../src/gKit/color.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/uniforms.o: ../src/gKit/uniforms.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/draw.o: ../src/gKit/draw.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/mesh.o: ../src/gKit/mesh.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/text.o: ../src/gKit/text.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/rgbe.o: ../src/gKit/rgbe.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/image_io.o: ../src/gKit/image_io.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/mat.o: ../src/gKit/mat.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/app.o: ../src/gKit/app.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/image.o: ../src/gKit/image.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/gamepads.o: ../src/gKit/gamepads.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/wavefront.o: ../src/gKit/wavefront.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/image_hdr.o: ../src/gKit/image_hdr.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/vec.o: ../src/gKit/vec.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/orbiter.o: ../src/gKit/orbiter.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/terrain.o: src/terrain.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/player.o: src/player.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/bezierPath.o: src/bezierPath.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/scoreManager.o: src/scoreManager.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/parser.o: src/parser.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/pngUtilities.o: src/pngUtilities.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/controller.o: src/controller.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/terrain.o: src/terrain.cpp
+$(OBJDIR)/pngUtilities.o: src/pngUtilities.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/parser.o: src/parser.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/objectsManager.o: src/objectsManager.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/mm_player.o: mm_player.cpp
