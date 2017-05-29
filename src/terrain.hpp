@@ -76,32 +76,97 @@ struct Checkpoint {
     float radius;       /**< Rayon, calculé grâce aux 2 points */
 };
 
+/**
+ * \class GeneratedTerrain
+ * \brief Gestion du terrain généré à partir d'une carte de hauteur
+ */
 class GeneratedTerrain : public Terrain {
     public :
+        /**
+         * \brief Génération du terrain
+         * Génère le terrain en lisant une image png en niveau de gris (carte de hauteurs).
+         * Normalise et agrandit le terrain.
+         * Crée le mesh du terrain et un mesh pour le socle sous le terrain (nécessaire pour les effets de lumière du shader).
+         * Applique la fonction smooth au terrain pour le lisser.
+         * \param pmin : point minimum du terrain (inutilisé pour l'instant)
+         * \param pmax : point maximum du terrain (inutilisé pour l'instant)
+         */
         GeneratedTerrain(const Point& pmin, const Point& pmax) ;
+        /**
+         * \brief Lissage du terrain
+         * Pour chaque sommet, fait une moyenne de la hauteur avec les sommets voisins (carré de 9x9).
+         * \param iterations : nombre d'itérations à effectuer
+         */
         void smooth(std::vector< std::vector< Vector > >& vVertexData, const unsigned int iterations) ;
+        /**
+         * 
+         */
         void project(const Point& from, Point& to, Vector& n) const ;
+        /**
+         *
+         */
         void project(const Point& from, Point& to, Vector& n, Player* player) const ;
+        /**
+         * \brief Dessin de base du terrain
+         * \param v : matrice view
+         * \param p : matrice projection
+         */
         void draw(const Transform& v, const Transform& p) ;
+        /**
+         * \brief Dessin du terrain via un shader
+         * \param shaders_program : shader à utiliser
+         * \param model : matrice model
+         * \param view : matrice view
+         * \param proj : matrice projection
+         */
         void draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
+        /**
+         * \brief Dessine le socle du terrain via un shader
+         * \param shaders_program : shader à utiliser
+         * \param model : matrice model
+         * \param view : matrice view
+         * \param proj : matrice projection
+         */
         void drawUnderBox(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
+        /**
+         * \brief Initialise les checkpoints du terrain
+         * Lit deux fichiers : un avec les coordonnées du centre des checkpoints, l'autre avec un second point sur le rayon max du checkpoint.
+         * Normalise les positions des points et applique la transformation.
+         * Déduit le rayon du checkpoint et l'ajoute à la liste de checkpoints.
+         * \param transform : transformation à effectuer sur les checkpoints
+         */
         void setCheckpoints(Transform transform) ;
-        void drawCheckpoints(Transform model, Transform view, Transform proj);
+        /**
+         * \brief Checkpoints
+         * \return un vector contenant les checkpoints
+         */
         std::vector<Checkpoint> getCheckpoints() const;
-
+        /**
+         * \brief Libération des ressources
+         */
         void release() ;
 
     private :
-        Mesh mesh_ ;
-        Mesh underBox_;
-        unsigned int height;
-        unsigned int width;
+        /**
+         *
+         */
         bool collideWithTriangleGird(Point pos, int ia, int ib, int ic);
+        /**
+         *
+         */
         float getHeight(Point pos, int ia, int ib, int ic);
+        /**
+         *
+         */
         Vector getNormal(Point pos, int ia, int ib, int ic);
-        unsigned int step; // un point sur step est pris en compte dans la génération du terrain (depuis l'image png)
-        std::vector<Checkpoint> checkpoints_;
-        std::vector<Mesh> meshs_checkpoints_;
+
+        Mesh mesh_ ;                            /**< Mesh du terrain */
+        Mesh underBox_;                         /**< Mesh du socle du terrain */
+        unsigned int height;                    /**< Hauteur/longueur du terrain */
+        unsigned int width;                     /**< Largeur du terrain */
+        // un point sur step est pris en compte dans la génération du terrain (depuis l'image png)
+        unsigned int step;                      /**< Pas utilisé dans la lecture des pixels de l'image png */
+        std::vector<Checkpoint> checkpoints_;   /**< Liste des checkpoints */
 } ;
 
 

@@ -1,8 +1,3 @@
-- splines cubiques pour les segments de fonctions représentant le chemin
-- position d'une voiture par rapport au chemin
-- savoir qui est premier
-- chute/trop de retard -> élimination (repositionnement des joueurs sur le circuit)
-- caméra à rapprocher peut-être un peu lorsque les 2 voitures sont en lice
-- obstacles, mesh, textures
-- collisions avec les obstacles (ou bonus/malus, par ex flèche de vitesse, flaque d'huile)
-- système de points, arrivée à 3 points -> victoire
+- objets bonus/malus
+- ombres des objets
+- lumière des phares qui ne traverse pas les montagnes
