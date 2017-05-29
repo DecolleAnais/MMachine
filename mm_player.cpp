@@ -271,7 +271,7 @@ public:
 
         /************* DESSIN OBJETS *************/
         objectsManager_.draw(m_program, view, projection);
-        
+
     }
 
     Transform getLightSource(){
@@ -359,23 +359,21 @@ public:
         score_.draw();
 
         /* s'il y a un gagnant, affichage spécifique pendant 5 s */
-        // time = Clock::now();
-        // float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
-        // if(score_.end()) {
-        //     score_.drawWinner();
-        //     if (winner_delay > 5.0) {
-        //             return 0;
-        //     }
-        // }else {
-        //     if(score_.getRoundWinner() != -1) {
-        //         score_.drawRoundWinner();
-        //         if (winner_delay > 5.0) {
-        //             reset();
-        //         }
-        //     }
-        // }
-
-        
+        time = Clock::now();
+        float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
+        if(score_.end()) {
+            score_.drawWinner();
+            if (winner_delay > 5.0) {
+                    return 0;
+            }
+        }else {
+            if(score_.getRoundWinner() != -1) {
+                score_.drawRoundWinner();
+                if (winner_delay > 5.0) {
+                    reset();
+                }
+            }
+        }    
 
         /* Contrôles clavier */
         //reset
