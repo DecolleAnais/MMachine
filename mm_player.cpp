@@ -109,7 +109,6 @@ public:
         glClearDepth(1.f);                          // profondeur par defaut
         glDepthFunc(GL_LESS);                       // ztest, conserver l'intersection la plus proche de la camera
         glEnable(GL_DEPTH_TEST);                    // activer le ztest
-        glEnable(GL_CULL_FACE);
         
         /* Init shadowmap */
         shadowWidth_ = 1024 * 4;
@@ -217,20 +216,26 @@ public:
         oldPmin_ = pmin;
         oldPmax_ = pmax;
 
+        // if(cameraPos.x != cameraPos.x || cameraPos.y != cameraPos.y){
+        //     throw std::logic_error("Camera is not set right.");
+        // }
+
         return Lookat(cameraPos, center(pmin, pmax), Vector(0, 1, 0));
     }
 
 
     void updateScores(){
         score_.updateCheckpoints(joueur1_.getPosition(), joueur2_.getPosition());
-        /*bool falling_player_1 = isFallen(joueur1_);
-        bool falling_player_2 = isFallen(joueur2_);
+        bool falling_player_1 = joueur1_.isFallen();
+        bool falling_player_2 = joueur2_.isFallen();
         if(falling_player_1) {
             score_.updateScore(1);  // si le joueur 1 est tombé, le joueur 2 gagne la manche
+            winner_time_ = Clock::now();
         }else if(falling_player_2) {
             score_.updateScore(0);  // si le joueur 2 est tombé, le joueur 1 gagne la manche
+            winner_time_ = Clock::now();
         // s'il y a un trop grand écart dans le nombre de checkpoints validés (triche) ou si les joueurs sont trop espacés, désignation d'un gagnant    
-        }else*/ if(score_.getEcartCheckpoints() > 4 || distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
+        }else if(score_.getEcartCheckpoints() > 4 || distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
             int first = score_.getFirst(joueur1_.getPosition(), joueur2_.getPosition());
             score_.updateScore(first);
             winner_time_ = Clock::now();
@@ -262,9 +267,11 @@ public:
 
         /************* DESSIN TERRAIN *************/
         terrain_.draw(m_program, Identity(), view, projection);
+        terrain_.drawUnderBox(m_program, Identity(), view, projection);
 
         /************* DESSIN OBJETS *************/
         objectsManager_.draw(m_program, view, projection);
+        
     }
 
     Transform getLightSource(){
@@ -291,9 +298,19 @@ public:
 
         /* Déplace la caméra & récupère la projection */
         Transform view = updateCamera(score_.getRoundWinner());
+        /*try{
+            updateCamera(score_.getRoundWinner());
+        }
+        catch ( const std::logic_error & e ) 
+        { 
+            std::cerr << e.what(); 
+            return 1;
+        }*/
+        
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
 
         /* Calcul de la shadowmap */
+        glEnable(GL_CULL_FACE);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowBuffer_);
             glViewport(0, 0, shadowWidth_, shadowHeight_);
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -303,7 +320,7 @@ public:
             glUseProgram(shadow_program);
 
             Clock::time_point time = Clock::now();
-            float delta = 2 * (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - start_).count() / 1000.0;
+            float delta = 5 * (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - start_).count() / 1000.0;
             while(delta > 360.0)
                 delta -= 360.0;
 
@@ -314,6 +331,7 @@ public:
 
             // Rendu de la scene
             terrain_.draw(shadow_program, Identity(), lightView, lightProjection);
+            terrain_.drawUnderBox(shadow_program, Translation(-100.0, -100.0, 0.0) * Scale(2.0, 2.0, 1.0), lightView, lightProjection);
             program_uniform(shadow_program, "mvpMatrix",
                             lightProjection * lightView * joueur1_.transform());
             vehicule1_.draw(shadow_program);
@@ -322,6 +340,7 @@ public:
             vehicule2_.draw(shadow_program);
         // Remise au valeurs par défaut de l'affichage
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // glDisable(GL_CULL_FACE);
         glViewport(0, 0, window_width(), window_height());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_BACK);
@@ -340,21 +359,21 @@ public:
         score_.draw();
 
         /* s'il y a un gagnant, affichage spécifique pendant 5 s */
-        time = Clock::now();
-        float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
-        if(score_.end()) {
-            score_.drawWinner();
-            if (winner_delay > 5.0) {
-                    return 0;
-            }
-        }else {
-            if(score_.getRoundWinner() != -1) {
-                score_.drawRoundWinner();
-                if (winner_delay > 5.0) {
-                    reset();
-                }
-            }
-        }
+        // time = Clock::now();
+        // float winner_delay = (float)std::chrono::duration_cast<std::chrono::milliseconds>(time - winner_time_).count() / 1000.0;
+        // if(score_.end()) {
+        //     score_.drawWinner();
+        //     if (winner_delay > 5.0) {
+        //             return 0;
+        //     }
+        // }else {
+        //     if(score_.getRoundWinner() != -1) {
+        //         score_.drawRoundWinner();
+        //         if (winner_delay > 5.0) {
+        //             reset();
+        //         }
+        //     }
+        // }
 
         
 
