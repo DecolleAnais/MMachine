@@ -130,7 +130,6 @@ OBJECTS := \
 	$(OBJDIR)/orbiter.o \
 	$(OBJDIR)/terrain.o \
 	$(OBJDIR)/player.o \
-	$(OBJDIR)/bezierPath.o \
 	$(OBJDIR)/scoreManager.o \
 	$(OBJDIR)/controller.o \
 	$(OBJDIR)/pngUtilities.o \
@@ -261,9 +260,6 @@ $(OBJDIR)/terrain.o: src/terrain.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/player.o: src/player.cpp
-	@echo $(notdir $<)
-	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
-$(OBJDIR)/bezierPath.o: src/bezierPath.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/scoreManager.o: src/scoreManager.cpp

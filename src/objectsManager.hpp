@@ -18,10 +18,10 @@ struct Obj {
 	Mesh mesh;							/**< Mesh */
 	GLuint texture;						/**< Texture */
 	Transform transform;				/**< Transform appliqué à l'objet */
-	float xmin;
-	float xmax;
-	float ymin;
-	float ymax;
+	float xmin;							/**< xmin de la boîte englobante */
+	float xmax;							/**< xmax de la boîte englobante */
+	float ymin;							/**< ymin de la boîte englobante */
+	float ymax;							/**< ymax de la boîte englobante */
 };
 
 /**
@@ -49,6 +49,7 @@ public:
 	/**
 	 * \brief Dessin des objets
 	 * Dessine tous les objets
+	 * \param program : shader utilisé pour l'affichage
 	 * \param view : matrice vue
 	 * \param projection : matrice projection
 	 */

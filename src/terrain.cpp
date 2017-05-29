@@ -430,7 +430,6 @@ void GeneratedTerrain::setCheckpoints(Transform transform) {
       c.radius_point = Point(parser_points_radius.get(i, 0), parser_points_radius.get(i,1), 0);
       checkpoints_.push_back(c);
     }
-    // TODO radius doit être initialisé après que le point 2 (du rayon) ait été transformé
 
     for(Checkpoint &check : checkpoints_) {
       // normalisation et transformation du point au centre du checkpoint
@@ -446,31 +445,7 @@ void GeneratedTerrain::setCheckpoints(Transform transform) {
       // init du rayon
       check.radius = distance(check.center, check.radius_point);
     }
-    // TODO convertir les vector en points
-    Point  p1, p2;
-    for(unsigned int i = 0;i < checkpoints_.size();i++) {
-      p1 = checkpoints_[i].center;
-      if(i == checkpoints_.size()-1) {
-        p2 = checkpoints_[0].center;
-      }else {
-        p2 = checkpoints_[i+1].center;
-      }
-      
-      Mesh mesh(GL_LINES);
-      mesh.color(Red());
-      mesh.vertex(p1.x, p1.y, p1.z);
-      mesh.vertex(p2.x, p2.y, p2.z);
-      meshs_checkpoints_.push_back(mesh);
-      mesh.release();
-    }
 }
-
-void GeneratedTerrain::drawCheckpoints(Transform model, Transform view, Transform proj) {
-  for(Mesh m : meshs_checkpoints_) {
-    ::draw(m, model, view, proj);
-  }
-}
-
 
 std::vector<Checkpoint> GeneratedTerrain::getCheckpoints() const {
   return checkpoints_;
@@ -478,9 +453,7 @@ std::vector<Checkpoint> GeneratedTerrain::getCheckpoints() const {
 
 void GeneratedTerrain::release() {
   mesh_.release();
-  for(Mesh m : meshs_checkpoints_) {
-    m.release();
-  }
+  underBox_.release();
 }
 
 //Flat Terrain

@@ -10,6 +10,7 @@ ObjectsManager::ObjectsManager() {
 	Point pmin,pmax;
 	white_texture_ = read_texture(0, "MMachine/data/textures/White_Texture.png");
 
+	// samplers des textures
     samplers_.resize(2);
 
 	glGenSamplers(1, &samplers_[0]);
@@ -60,7 +61,7 @@ ObjectsManager::ObjectsManager() {
 	obj.mesh = read_mesh("MMachine/data/obj/Rock4.obj");
 	// texture
 	obj.texture = read_texture(0, "MMachine/data/textures/Rock4_Texture.png");
-	obj.transform = Translation(145.0, 68.0, 16.0);// * Scale(0.2,0.2,0.2);
+	obj.transform = Translation(145.0, 68.0, 16.0);
 	// points de la bounding box en 2D
 	(obj.mesh).bounds(pmin, pmax);
 	pmin = (obj.transform) (pmin);
@@ -76,8 +77,10 @@ ObjectsManager::ObjectsManager() {
 	(obj.mesh).release();
 }
 
+// fonction de collision avec les joueurs
 bool ObjectsManager::collideWithPlayer(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm) {
 	for(Obj o : objects_) {
+		// si collision détectée, le joueur reste à sa position initiale
 		if(newPos.x > o.xmin && newPos.x < o.xmax && newPos.y > o.ymin && newPos.y < o.ymax) {
 			newPos = oldPos;
 			newNorm = oldNorm;
@@ -91,8 +94,7 @@ void ObjectsManager::draw(const GLuint program, Transform view, Transform proj) 
 	// texture blanche pour que les textures des objets soient visibles
 	program_use_texture(program, "texture0", 0, white_texture_, samplers_[0]);
 	for(Obj o : objects_) {
-		//::draw(o.mesh, o.transform, view, projection, o.texture);
-        // texture
+        // texture de l'objet
         program_use_texture(program, "texture1", 1, o.texture, samplers_[1]);
         
         Transform mv = view * o.transform;
