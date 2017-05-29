@@ -341,14 +341,6 @@ public:
 
         /* Déplace la caméra & récupère la projection */
         Transform view = updateCamera(score_.getRoundWinner());
-        /*try{
-            updateCamera(score_.getRoundWinner());
-        }
-        catch ( const std::logic_error & e ) 
-        { 
-            std::cerr << e.what(); 
-            return 1;
-        }*/
         
         Transform projection = Perspective(90, (float) window_width() / (float) window_height(), 0.1f, 100.0f);
 
@@ -370,7 +362,6 @@ public:
             // Définition des transformations de la lumière
             Transform lightView = getLightSource() * RotationY(delta);
             Transform lightProjection = ortho(200.0, -200.0, 200.0, -200.0, 400.0, 0.0);
-            //Transform lightProjection = projection;
 
             // Rendu de la scene
             terrain_.draw(shadow_program, Identity(), lightView, lightProjection);
@@ -381,6 +372,7 @@ public:
             program_uniform(shadow_program, "mvpMatrix", 
                             lightProjection * lightView * joueur2_.transform());  
             vehicule2_.draw(shadow_program);
+            // objectsManager_.draw(m_program, view, projection);
         // Remise au valeurs par défaut de l'affichage
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // glDisable(GL_CULL_FACE);

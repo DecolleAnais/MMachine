@@ -1,0 +1,31 @@
+/***** Auteurs *****/
+Decolle Anaïs 11609753
+Auffret Quentin 11508216
+
+/***** Contenu *****/
+    - README : ce fichier
+    - mm_player.cpp et src/ : fichiers source du projet
+    - data/ : ressources nécessaires au fonctionnement du projet, ou fichiers de données de référence. Contient les modèles et leurs textures.
+    - shadow_shaders.glsl et vertex_fragment_shaders.glsl : shaders du projet
+    - Makefile, mm_player.d, mm_player.make, mm_terrain.make : fichiers de compilation
+
+/***** Utilisation *****/
+Placez-vous dans le dossier racine de gkit (dossier parent du dossier de ce fichier). 
+Pour compiler, exécutez : 
+    - sudo apt-get install libpng-dev premake4 gmake
+    - premake4 gmake
+    - make mm_player
+Pour exécuter :
+    - ./MMachine/bin/mm_player
+
+La touche "Echap" permet de quitter l'application.
+Le jeu se termine automatiquement quand l'un des deux joueurs obtient 4 étoiles. 
+Chaque joueur commence avec 2 étoiles. Si un joueur gagne une manche, il gagne une étoile, et l'autre joueur en perd une. 
+Un joueur gagne la manche s'il arrive a distancer suffisamment l'autre joueur, ou si ce dernier fait une chute. Si un joueur ne suit pas la piste et rate un checkpoint, il ne validera pas le suivants et se fera distancer automatiquement.
+
+/***** Documentation *****/
+Pour générer la documentation du code, exécutez dans le dossier de ce fichier :
+    - doxygen Doxyfile
+
+/***** Note des auteurs *****/
+Ce projet nous plaisant beaucoup, nous avions envie d'implémenter de nombreuses features supplémentaires. Du fait du manque de temps, nous n'avons pu tout réaliser. C'est pourquoi ce projet sera poursuivi dans l'objectif d'en faire un jeu complet. Voici le GitHub du projet : https://github.com/DecolleAnais/MMachine . Le clone du dépot doit être fait dans le dossier MMachine dans la racine de gkit.

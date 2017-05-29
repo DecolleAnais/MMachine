@@ -99,11 +99,16 @@ class GeneratedTerrain : public Terrain {
          */
         void smooth(std::vector< std::vector< Vector > >& vVertexData, const unsigned int iterations) ;
         /**
-         * 
+         * \brief Projette le joueur sur le terrain. 
+         * \brief Note : !!! DEPRECATED !!! Utiliser project(const Point& from, Point& to, Vector& n, Player* player)
          */
         void project(const Point& from, Point& to, Vector& n) const ;
         /**
-         *
+         * \brief Projette le joueur sur le terrain. 
+         * \param from : Point d'origine
+         * \param to : Point désiré de destination, modifié par la projection
+         * \param n : Normale désirée, modifiée par la projection
+         * \param player : Joueur subissant la projection
          */
         void project(const Point& from, Point& to, Vector& n, Player* player) const ;
         /**
@@ -148,15 +153,30 @@ class GeneratedTerrain : public Terrain {
 
     private :
         /**
-         *
+         * \brief Fonction de détection de collision d'un point avec un triangle, sans considération de l'axe z (projection sur le plan xy).
+         * \param pos : Point à tester.
+         * \param ia : indice du premier point du triangle
+         * \param ib : indice du second point du triangle
+         * \param ic : indice du troisième point du triangle
+         * \return true si le point est dans le triangle, false sinon
          */
         bool collideWithTriangleGird(Point pos, int ia, int ib, int ic);
         /**
-         *
+         * Retourne la hauteur d'un point dans un triangle en fonction de ses coordonnées xy.
+         * \param pos : Point à tester.
+         * \param ia : indice du premier point du triangle
+         * \param ib : indice du second point du triangle
+         * \param ic : indice du troisième point du triangle
+         * \return moyenne pondérée de la hauteur des vertex (hauteur exacte du point)
          */
         float getHeight(Point pos, int ia, int ib, int ic);
         /**
-         *
+         * Retourne la normale d'un point dans un triangle en fonction de ses coordonnées xy.
+         * \param pos : Point à tester.
+         * \param ia : indice du premier point du triangle
+         * \param ib : indice du second point du triangle
+         * \param ic : indice du troisième point du triangle
+         * \return moyenne pondérée de la normale des vertex (normale exacte du point)
          */
         Vector getNormal(Point pos, int ia, int ib, int ic);
 

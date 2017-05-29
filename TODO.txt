@@ -1,3 +1,0 @@
-- objets bonus/malus
-- ombres des objets
-- lumière des phares qui ne traverse pas les montagnes

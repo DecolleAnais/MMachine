@@ -238,24 +238,26 @@ void GeneratedTerrain::smooth(std::vector< std::vector< Vector > >& vVertexData,
 void GeneratedTerrain::project(const Point& from, Point& to, Vector& n, Player* player) const {
   float step = mesh_.positions().at(1).y - mesh_.positions().at(0).y;
 
-
+  // récupération des id des vertex supérieur gauche et inférieur gauche de la grille
   unsigned int girdX = to.x / step;
   unsigned int girdY = to.y / step;
   unsigned int vertexTopIndex = girdX * width + girdY;
   unsigned int vertexBottomIndex = (girdX+1) * width + girdY;
 
+  // vérification que les id sont bien des id du mesh. Le cas échéant, le véhicule n'est pas sur le terrain et sa normale est verticale.
   if(vertexBottomIndex >= height * width || vertexTopIndex >= height * width 
         || vertexTopIndex+1 >= height * width || vertexBottomIndex+1 >= height * width){
     n = Vector(0.f,0.f,1.f);
     return;
   }
 
+  // récupération des id des 4 vertex entourant le véhicule (quad dans lequel le véhicule est).
   unsigned int tl = vertexTopIndex;
   unsigned int tr = vertexTopIndex + 1;
   unsigned int bl = vertexBottomIndex;
   unsigned int br = vertexBottomIndex + 1;
 
-  
+  // calcul du triangle du quad dans lequel est le véhicule.
   if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tl, bl, tr)){
     to.z = ((GeneratedTerrain *)this)->getHeight(to, tl, bl, tr);
     n = ((GeneratedTerrain *)this)->getNormal(to, tl, bl, tr);
@@ -264,19 +266,20 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n, Player* 
     to.z = ((GeneratedTerrain *)this)->getHeight(to, tr, bl, br);
     n = ((GeneratedTerrain *)this)->getNormal(to, tr, bl, br);
   }
+  // triangle non trouvé, le véhicule est hors terrain.
   else {
     to.z = 0.f;
     n = Vector(0.f,0.f,1.f);
   }
 
-  // Glissade en pente
+  // glissade en pente
   float slipCosAngle = 0.9;
   float slip = 0.05;
   float zFall = -1.0;
   if(dot(n, Vector(0.f, 0.f, 1.f)) < slipCosAngle){
     to.x += n.x * slip;
     to.y += n.y * slip;
-    player->setCurrentFallingDist(fabs(from.z - to.z));
+    player->setCurrentFallingDist(fabs(from.z - to.z)); 
   }
   else{
     player->setCurrentFallingDist(0.0);
@@ -284,10 +287,12 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n, Player* 
 }
 
 bool GeneratedTerrain::collideWithTriangleGird(Point pos, int ia, int ib, int ic){
+  // récupération des vertex du triangle
   Point a(mesh_.positions().at(ia));
   Point b(mesh_.positions().at(ib));
   Point c(mesh_.positions().at(ic));
 
+  // on cherche à savoir si le point est à gauche des arretes du triangle (det < 0)
   Vector ref = b - a;
   Vector target = pos - a;
   float det1 = ref.y * target.x - ref.x * target.y;
@@ -300,36 +305,44 @@ bool GeneratedTerrain::collideWithTriangleGird(Point pos, int ia, int ib, int ic
   target = pos - c;
   float det3 = ref.y * target.x - ref.x * target.y;
 
+  // toujours à gauche = dans le triangle
   if(det1 <= 0 && det2 <= 0 && det3 <= 0)
     return true;
   return false;
 }
 
 float GeneratedTerrain::getHeight(Point pos, int ia, int ib, int ic){
+  // récupération des vertex du triangle
   Point a(mesh_.positions().at(ia));
   Point b(mesh_.positions().at(ib));
   Point c(mesh_.positions().at(ic));
 
+  // récupération de la distance aux vertex
   float distA = distance(pos, a);
   float distB = distance(pos, b);
   float distC = distance(pos, c);
 
+  // moyenne pondérée des hauteurs
   return (distA * a.z + distB * b.z + distC * c.z) / (distA + distB + distC);
 }
 
 Vector GeneratedTerrain::getNormal(Point pos, int ia, int ib, int ic){
+  // récupération des vertex du triangle
   Point a(mesh_.positions().at(ia));
   Point b(mesh_.positions().at(ib));
   Point c(mesh_.positions().at(ic));
 
+  // récupération des normales du triangle
   Vector aV(mesh_.normals().at(ia));
   Vector bV(mesh_.normals().at(ib));
   Vector cV(mesh_.normals().at(ic));
 
+  // récupération de la distance aux vertex
   float distA = distance(pos, a);
   float distB = distance(pos, b);
   float distC = distance(pos, c);
 
+  // moyenne pondérée des normales
   return normalize((distA * aV + distB * bV + distC * cV) / (distA + distB + distC));
 }
 
@@ -355,10 +368,6 @@ void GeneratedTerrain::draw(const GLuint& shaders_program, Transform model, Tran
   program_uniform(shaders_program, "viewMatrix", view);
   program_uniform(shaders_program, "viewInvMatrix", view.inverse());
 
-  // program_use_texture(shaders_program, "texture0", 0, textures[0]);
-  // program_use_texture(shaders_program, "texture1", 0, textures[1]);
-  // program_use_texture(shaders_program, "texture2", 0, textures[2]);
-
   mesh_.draw(shaders_program);
 }
 
@@ -379,10 +388,6 @@ void GeneratedTerrain::drawUnderBox(const GLuint& shaders_program, Transform mod
   program_uniform(shaders_program, "modelMatrix", model);
   program_uniform(shaders_program, "viewMatrix", view);
   program_uniform(shaders_program, "viewInvMatrix", view.inverse());
-
-  // program_use_texture(shaders_program, "texture0", 0, textures[0]);
-  // program_use_texture(shaders_program, "texture1", 0, textures[1]);
-  // program_use_texture(shaders_program, "texture2", 0, textures[2]);
 
   underBox_.draw(shaders_program);
 }
