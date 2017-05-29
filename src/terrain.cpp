@@ -24,7 +24,7 @@ std::string getCurrentPath(){
 // Generated Terrain
 GeneratedTerrain::GeneratedTerrain(const Point& pmin, const Point& pmax) : mesh_(GL_TRIANGLES), underBox_(GL_TRIANGLES){
   PngUtilities png;
-  std::string pathToMap = getCurrentPath() + "/../textures/circuit.png";
+  std::string pathToMap = getCurrentPath() + "/../data/circuit.png";
   png.init(pathToMap.c_str());
   unsigned int png_height = png.getHeight();
   unsigned int png_width = png.getWidth();
@@ -418,8 +418,8 @@ void GeneratedTerrain::setCheckpoints(Transform transform) {
     unsigned int h = 1024;
 
     // lecture des fichiers contenant les coordoonées des points
-    Parser parser_points = Parser("MMachine/textures/path_points.txt");
-    Parser parser_points_radius = Parser("MMachine/textures/path_points_radius.txt");
+    Parser parser_points = Parser("MMachine/data/path_points.txt");
+    Parser parser_points_radius = Parser("MMachine/data/path_points_radius.txt");
 
     assert(parser_points.getNbLines() == parser_points_radius.getNbLines());
 

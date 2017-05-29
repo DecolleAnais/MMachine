@@ -91,39 +91,6 @@ vec2 poissonDisk[16] = vec2[](
    vec2( 0.14383161, -0.14100790 ) 
 );
 
-// float ShadowCalculation(vec4 fragPosLightSpace, vec3 light2pos){
-//     // perform perspective divide
-//     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-//     // Transform to [0,1] range
-//     projCoords = projCoords * 0.5 + 0.5;
-//     // Get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-//     float closestDepth = texture(shadowMap, projCoords.xy).r; 
-//     // Get depth of current fragment from light's perspective
-//     float currentDepth = projCoords.z;
-//     // Calculate bias (based on depth map resolution and slope)
-//     float bias = max(0.05 * (1.0 - dot(normalize(vNormal), normalize(light2pos))), 0.005);
-//     // Check whether current frag pos is in shadow
-//     // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
-//     // PCF
-//     float shadow = 0.0;
-//     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-//     for(int x = -1; x <= 1; ++x)
-//     {
-//         for(int y = -1; y <= 1; ++y)
-//         {
-//             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-//             shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
-//         }    
-//     }
-//     shadow /= 9.0;
-    
-//     // Keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-//     if(projCoords.z > 1.0)
-//         shadow = 0.0;
-        
-//     return shadow;
-// }
-
 // Returns a random number based on a vec3 and an int.
 float random(vec3 seed, int i){
     vec4 seed4 = vec4(seed,i);
@@ -146,7 +113,7 @@ float ShadowCalculation(vec4 fragPosLightSpace){
     bias = clamp(bias, 0,0.01);
 
     // Sample the shadow map 8 times
-    for (int i=0;i<16;i++){
+    for (int i=0;i<4;i++){
         // use either :
         //  - Always the same samples.
         //    Gives a fixed pattern in the shadow, but no noise
@@ -161,7 +128,7 @@ float ShadowCalculation(vec4 fragPosLightSpace){
         // being fully in the shadow will eat up 4*0.2 = 0.8
         // 0.2 potentially remain, which is quite dark.
         if ( texture( shadowMap, projCoords.xy + poissonDisk[i]/1200.0 ).r  <  projCoords.z-bias ){
-            visibility-= 0.06;
+            visibility-= 0.1;
         }
     }
 
@@ -220,8 +187,6 @@ vec3 getSpotsLight(){
 
 void main( )
 {
-    
-
     // Ambiant light
     vec3 ambiantLight = vec3(0.1, 0.1, 0.1);
 

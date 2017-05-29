@@ -17,8 +17,8 @@ ScoreManager::ScoreManager(const unsigned int max_score, unsigned int score_play
 
 	// initialisation des meshs pour l'affichage du score
 	textures_.resize(2);
-	textures_[0] = read_texture(0, "MMachine/textures/red_ball.png");
-    textures_[1] = read_texture(1, "MMachine/textures/blue_ball.png");
+	textures_[0] = read_texture(0, "MMachine/data/textures/red_ball.png");
+    textures_[1] = read_texture(1, "MMachine/data/textures/blue_ball.png");
 
     // taille des images
     float height = 20.0;

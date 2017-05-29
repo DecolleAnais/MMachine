@@ -128,6 +128,7 @@ OBJECTS := \
 	$(OBJDIR)/image_hdr.o \
 	$(OBJDIR)/texture.o \
 	$(OBJDIR)/color.o \
+	$(OBJDIR)/objectsManager.o \
 	$(OBJDIR)/player.o \
 	$(OBJDIR)/scoreManager.o \
 	$(OBJDIR)/parser.o \
@@ -253,6 +254,9 @@ $(OBJDIR)/texture.o: ../src/gKit/texture.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/color.o: ../src/gKit/color.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/objectsManager.o: src/objectsManager.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/player.o: src/player.cpp

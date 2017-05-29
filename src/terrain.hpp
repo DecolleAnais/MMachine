@@ -1,16 +1,26 @@
 #ifndef _MMACHINE_TERRAIN_HPP_
 #define _MMACHINE_TERRAIN_HPP_
 
+/**
+ * \file terrain.hpp
+ * \brief Gestion du terrain
+ */
+
+#include "player.hpp"
+
 #include "vec.h"
 #include "mat.h"
 #include "mesh.h"
 #include "image.h"
 #include "orbiter.h"
 
-#include "player.hpp"
-
 class Player;
 
+/**
+ * \class Terrain
+ * \brief Gestion du terrain
+ * Génère un terrain depuis une carte de hauteur, crée les checkpoints, dessine le terrain et gère les projections sur le terrain
+ */
 class Terrain {
   public :
     /** 
@@ -35,21 +45,35 @@ class Terrain {
 
 } ;
 
-
+/**
+ * \class FlatTerrain
+ * \brief Terrain plat de base
+ */
 class FlatTerrain : public Terrain {
   public :
+    /**
+     * \brief Constructeur
+     * Génère un terrain plat allant de pmin à pmax
+     * \param pmin : point minimum du terrain
+     * \param pmax : point max du terrain
+     */
     FlatTerrain(const Point& pmin, const Point& pmax) ;
     void project(const Point& from, Point& to, Vector& n) const ;
     void draw(const Transform& v, const Transform& p) ;
 
   private :
-    Mesh mesh_ ;
+    Mesh mesh_ ; /**< Mesh du terrain */
 } ;
 
+/**
+ * \struct Checkpoint
+ * \brief Stocke les données d'un checkpoint 
+ * Stocke la position du centre, la position d'un point du rayon, le rayon
+ */
 struct Checkpoint {
-    Point center;
-    Point radius_point;
-    float radius;
+    Point center;       /**< Point au centre du checkpoint */
+    Point radius_point; /**< Point sur le rayon */
+    float radius;       /**< Rayon, calculé grâce aux 2 points */
 };
 
 class GeneratedTerrain : public Terrain {
