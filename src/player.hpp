@@ -7,6 +7,8 @@
 #include "mat.h"
 #include "vec.h"
 
+class Terrain;
+
 class Player {
   public :
     Player() ;
@@ -78,6 +80,8 @@ class Player {
     void setOtherPlayer(Player& player);  
     std::vector<Point> getCornerPoints();  
     void step() ;
+    bool isFallen();
+    void setCurrentFallingDist(float currentFallingDist);
     
   private :
 
@@ -111,8 +115,9 @@ class Player {
     float max_speed_ ;
     vec2 friction_ ;
 
-    // others
+    // falling
     bool fallen_;
+    float fallingDist_;
 } ;
 
 #endif

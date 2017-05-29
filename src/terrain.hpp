@@ -7,6 +7,9 @@
 #include "image.h"
 #include "orbiter.h"
 
+#include "player.hpp"
+
+class Player;
 
 class Terrain {
   public :
@@ -20,14 +23,14 @@ class Terrain {
      * fournir au programme appelant la position a laquelle le vehicule est
      * parvenu, et la normale du terrain a ce point.
      */
-    virtual void project(const Point& from, Point& to, Vector& n) const = 0 ;
+    void project(const Point& from, Point& to, Vector& n) const ;
 
     /**
      * Fonction d'affichage du terrain
      * @param v la matrice view de la camera
      * @param p la matrice de projection de la camera
      */
-    virtual void draw(const Transform& v, const Transform& p) = 0 ;
+    void draw(const Transform& v, const Transform& p) ;
 
 
 } ;
@@ -54,6 +57,7 @@ class GeneratedTerrain : public Terrain {
         GeneratedTerrain(const Point& pmin, const Point& pmax) ;
         void smooth(std::vector< std::vector< Vector > >& vVertexData, const unsigned int iterations) ;
         void project(const Point& from, Point& to, Vector& n) const ;
+        void project(const Point& from, Point& to, Vector& n, Player* player) const ;
         void draw(const Transform& v, const Transform& p) ;
         void draw(const GLuint& shaders_program, Transform model, Transform view, Transform proj) ;
         void setCheckpoints(Transform transform) ;

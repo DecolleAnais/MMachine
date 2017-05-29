@@ -217,14 +217,16 @@ public:
 
     void updateScores(){
         score_.updateCheckpoints(joueur1_.getPosition(), joueur2_.getPosition());
-        /*bool falling_player_1 = isFallen(joueur1_);
-        bool falling_player_2 = isFallen(joueur2_);
+        bool falling_player_1 = joueur1_.isFallen();
+        bool falling_player_2 = joueur2_.isFallen();
         if(falling_player_1) {
             score_.updateScore(1);  // si le joueur 1 est tombé, le joueur 2 gagne la manche
+            winner_time_ = Clock::now();
         }else if(falling_player_2) {
             score_.updateScore(0);  // si le joueur 2 est tombé, le joueur 1 gagne la manche
+            winner_time_ = Clock::now();
         // s'il y a un trop grand écart dans le nombre de checkpoints validés (triche) ou si les joueurs sont trop espacés, désignation d'un gagnant    
-        }else*/ if(score_.getEcartCheckpoints() > 4 || distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
+        }else if(score_.getEcartCheckpoints() > 4 || distance(joueur1_.getPosition(), joueur2_.getPosition()) >= 50){
             int first = score_.getFirst(joueur1_.getPosition(), joueur2_.getPosition());
             score_.updateScore(first);
             winner_time_ = Clock::now();

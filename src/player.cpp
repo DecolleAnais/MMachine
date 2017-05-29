@@ -175,7 +175,7 @@ void Player::project(Point& candidate) {
 
   Vector newNormal = normal_;
 
-  terrain_->project(position_, candidate, newNormal);
+  ((GeneratedTerrain*)terrain_)->project(position_, candidate, newNormal, this);
   collide(position_, normal_, candidate, newNormal);
 
   normal_ = newNormal;
@@ -255,4 +255,20 @@ std::vector<Point> Player::getCornerPoints(){
   corners.push_back(Point(-sizeX_, -sizeY_, sizeZ_));
   corners.push_back(Point(-sizeX_, -sizeY_, -sizeZ_));
   return corners;
+}
+
+bool Player::isFallen(){
+  return fallen_;
+}
+
+void Player::setCurrentFallingDist(float currentFallingDist){
+  if(currentFallingDist <= 0.0){
+    fallingDist_ = 0.0;
+    fallen_ = false;
+  }
+  else{
+    fallingDist_ += currentFallingDist;
+    if(fallingDist_ >= 2.0)
+      fallen_ = true;
+  }
 }
