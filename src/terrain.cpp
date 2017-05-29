@@ -238,21 +238,14 @@ void GeneratedTerrain::smooth(std::vector< std::vector< Vector > >& vVertexData,
 void GeneratedTerrain::project(const Point& from, Point& to, Vector& n, Player* player) const {
   float step = mesh_.positions().at(1).y - mesh_.positions().at(0).y;
 
-  // std::cout << Point(mesh_.positions().at(1)) << " ; " << Point(mesh_.positions().at(0)) << std::endl;
-  // std::cout << height << " " << width << "; " << step << std::endl;
 
   unsigned int girdX = to.x / step;
   unsigned int girdY = to.y / step;
   unsigned int vertexTopIndex = girdX * width + girdY;
   unsigned int vertexBottomIndex = (girdX+1) * width + girdY;
 
-  // std::cout << girdX << " " << girdY << "; " << vertexTopIndex << " " << vertexBottomIndex << std::endl;
-  // std::cout << "VOITURE : " << to << std::endl; 
-  // std::cout << Point(mesh_.positions().at(0)) << " ; " << Point(mesh_.positions().at((width-1) * (height-1))) << std::endl;
-
   if(vertexBottomIndex >= height * width || vertexTopIndex >= height * width 
         || vertexTopIndex+1 >= height * width || vertexBottomIndex+1 >= height * width){
-    //std::cerr << "***** ERROR : Player not on terrain *****" << std::endl;
     n = Vector(0.f,0.f,1.f);
     return;
   }
@@ -262,37 +255,18 @@ void GeneratedTerrain::project(const Point& from, Point& to, Vector& n, Player* 
   unsigned int bl = vertexBottomIndex;
   unsigned int br = vertexBottomIndex + 1;
 
-  // std::cout << tl << "\t\t\t" << tr << std::endl; 
-  // std::cout << "\t\t\t" << to << std::endl;
-  // std::cout << bl << "\t\t\t" << br << std::endl;
-
   
   if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tl, bl, tr)){
     to.z = ((GeneratedTerrain *)this)->getHeight(to, tl, bl, tr);
     n = ((GeneratedTerrain *)this)->getNormal(to, tl, bl, tr);
-
-    // Glisade en pente
-    // if(dot(n, Vector(0.f, 0.f, 1.f)) < slipCosAngle){
-    //   to.x += n.x * slip;
-    //   to.y += n.y * slip;
-    //   n = ((GeneratedTerrain *)this)->getNormal(to, tl, bl, tr);
-    // }
   }
   else if(((GeneratedTerrain *)this)->collideWithTriangleGird(to, tr, bl, br)){
     to.z = ((GeneratedTerrain *)this)->getHeight(to, tr, bl, br);
     n = ((GeneratedTerrain *)this)->getNormal(to, tr, bl, br);
-
-    // Glissade en pente
-    // if(dot(n, Vector(0.f, 0.f, 1.f)) < slipCosAngle){
-    //   to.x += n.x * slip;
-    //   to.y += n.y * slip;
-    //   //n = ((GeneratedTerrain *)this)->getNormal(to, tl, bl, tr);
-    // }
   }
   else {
     to.z = 0.f;
     n = Vector(0.f,0.f,1.f);
-    //std::cerr << "***** ERROR : Terrain projection failed! *****" << std::endl;
   }
 
   // Glissade en pente

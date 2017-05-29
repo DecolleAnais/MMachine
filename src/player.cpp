@@ -150,9 +150,7 @@ void Player::set_controller(const Controller* controller) {
 }
 
 void Player::set_bounding_box(const Point p1, const Point p2) {
-
-  std::cout << p1 << " ; " << p2 << std::endl;
-
+  // Définition de la taille de chaque véhicule sur chaque axe
   sizeX_ = fabs(p2.x - p1.x) / 2.0;
   sizeY_ = fabs(p2.y - p1.y) / 2.0;
   sizeZ_ = fabs(p2.z - p1.z) / 2.0;
@@ -171,16 +169,16 @@ float Player::get_z() {
 }
 
 void Player::project(Point& candidate) {
-  //project position and get normal
-
   Vector newNormal = normal_;
 
+  // projette le joueur sur le terrain
   ((GeneratedTerrain*)terrain_)->project(position_, candidate, newNormal, this);
+  // gère les collisions
   collide(position_, normal_, candidate, newNormal);
 
   normal_ = newNormal;
 
-  //project direction
+  // recalcule la direction
   direction_ = normalize(direction_ - dot(direction_, normal_)*normal_) ;
 }
 
@@ -198,8 +196,9 @@ bool Player::collide(const Point& oldPos, const Vector& oldNorm, Point& newPos, 
 
 bool Player::collideWithTerrain(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm){  
   float angleNormZ = dot(newNorm, Vector(0.f, 0.f, 1.f));
+  // Vérification de la raideur de la pente
   if(angleNormZ < 0.75){
-    /* Autorise seulement de descendre une pente, mais pas de la monter si elle est trop abrupte */
+    // Autorise seulement de descendre une pente trop raide, mais pas de la monter
     Vector dir = normalize(direction_ - dot(direction_, newNorm)*newNorm);
     float angleDirZ = dot(dir, Vector(0.f, 0.f, 1.f)); 
     if(angleDirZ > 0){
@@ -212,19 +211,20 @@ bool Player::collideWithTerrain(const Point& oldPos, const Vector& oldNorm, Poin
 }
 
 bool Player::collideWithPlayer(const Point& oldPos, const Vector& oldNorm, Point& newPos, Vector& newNorm){
+  // vecteur entre le centre du joueur adverse et la position du joueur courant
   Vector p = playerToCollide_->getPosition() - position_;
+  // récupération des points de la bounding box adverse
   std::vector<Point> corners = playerToCollide_->getCornerPoints();
+  // pour chaque point de la bounding box, on vérifie s'il est dans la bounding box du joueur courant.
   for (std::vector<Point>::iterator it = corners.begin(); it!= corners.end(); ++it){
     Vector pc = p + Vector(*it);
-
     if(pc.x >= -sizeX_ && pc.x <= sizeX_ &&
         pc.y >= -sizeY_ && pc.y <= sizeY_ &&
         pc.z >= -sizeZ_ && pc.z <= sizeZ_){
 
-      Vector knockback = (-(pc + p) / 2.0 ) * 0.1;
+      Vector knockback = (-(pc + p) / 2.0 ) * 0.1; // collision -> on applique un knockback au joueur courant
 
-      newPos = newPos + knockback;
-      //std::cerr << "COLLISION" << std::endl;
+      newPos = newPos + knockback; // maj avec knockback
       return true;
     }
   }
@@ -266,13 +266,15 @@ bool Player::isFallen(){
 }
 
 void Player::setCurrentFallingDist(float currentFallingDist){
+  // distance de glissade à 0 : pas de chute -> reset
   if(currentFallingDist <= 0.0){
     fallingDist_ = 0.0;
     fallen_ = false;
   }
+  // glissade -> on incrémente la distance de glissade totale
   else{
     fallingDist_ += currentFallingDist;
-    if(fallingDist_ >= 2.0)
+    if(fallingDist_ >= 2.0) // Trop de glissade = chute! 
       fallen_ = true;
   }
 }
